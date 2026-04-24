@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="Rhizome Thinking - 个人知识库">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Rhizome Thinking</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/static/images/icon.svg">
+    <link rel="apple-touch-icon" href="/static/images/icon-192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Splash Screen for PWA -->
+    <div id="splash-screen">
+        <svg class="splash-logo" viewBox="0 0 24 24" fill="none" stroke="url(#splash-gradient)" stroke-width="1.5">
+            <defs>
+                <linearGradient id="splash-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#a29bfe"/>
+                    <stop offset="100%" style="stop-color:#00cec9"/>
+                </linearGradient>
+            </defs>
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            <path d="M2 12h20"></path>
+        </svg>
+        <span class="splash-text">Rhizome Thinking</span>
+    </div>
+
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <button id="menuToggle" class="icon-btn" aria-label="菜单">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <h1>Rhizome Thinking</h1>
+            <button id="settingsBtn" class="icon-btn" aria-label="设置">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <!-- Control Panel (Left Sidebar) -->
+            <aside id="controlPanel" class="control-panel">
+                <div class="control-section">
+                    <div class="search-box">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="输入语义锚点..."
+                            autocomplete="off"
+                        >
+                        <button id="searchBtn" class="search-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">时间范围</label>
+                    <select id="timeRange" class="modifier-select">
+                        <option value="all">全部时间</option>
+                        <option value="last_week">最近一周</option>
+                        <option value="last_month">最近一月</option>
+                        <option value="last_3_months">近三个月</option>
+                    </select>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">显示数量</label>
+                    <select id="limitSelect" class="modifier-select">
+                        <option value="10">每列 10 条</option>
+                        <option value="20" selected>每列 20 条</option>
+                        <option value="50">每列 50 条</option>
+                    </select>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">搜索模式</label>
+                    <div class="search-mode-buttons">
+                        <button class="search-mode-btn active" data-mode="strict" title="只返回高度相关的结果">
+                            <span class="mode-icon">🎯</span>
+                            <span class="mode-label">精确</span>
+                        </button>
+                        <button class="search-mode-btn" data-mode="balanced" title="平衡精确度和召回率">
+                            <span class="mode-icon">⚖️</span>
+                            <span class="mode-label">平衡</span>
+                        </button>
+                        <button class="search-mode-btn" data-mode="explore" title="发现更多潜在相关内容">
+                            <span class="mode-icon">🔍</span>
+                            <span class="mode-label">探索</span>
+                        </button>
+                    </div>
+                    <small id="searchModeHelp" style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">平衡模式：返回与搜索词相关的内容</small>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">分类筛选</label>
+                    <div class="tag-filters">
+                        <button class="tag-filter active" data-tag="all">全部</button>
+                        <button class="tag-filter" data-tag="definitive">明确结论</button>
+                        <button class="tag-filter" data-tag="inferred">推断结论</button>
+                        <button class="tag-filter" data-tag="vague">模糊感知</button>
+                        <button class="tag-filter" data-tag="needs_thinking">待思考</button>
+                        <button class="tag-filter" data-tag="cross-domain">跨域连接</button>
+                    </div>
+                </div>
+
+                <div class="control-section mobile-nav">
+                    <button class="nav-item" data-view="searchView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <span>查询</span>
+                    </button>
+                    <button class="nav-item" data-view="addNodeView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <span>添加节点</span>
+                    </button>
+                    <button class="nav-item" data-view="outlineView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        <span>大纲视图</span>
+                    </button>
+                    <button class="nav-item" data-view="epistemicMapView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <span>认知地图</span>
+                    </button>
+                    <button class="nav-item" data-view="graphView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        <span>关系图</span>
+                    </button>
+                    <button class="nav-item" data-view="statsView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        <span>统计</span>
+                    </button>
+                </div>
+
+                <!-- Reset Options Button -->
+                <div class="control-section reset-section">
+                    <button id="resetOptionsBtn" class="reset-options-btn" title="重置查询选项">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- View: Search -->
+                <div id="searchView" class="view active">
+                    <!-- Search Progress Bar -->
+                    <div id="searchProgress" class="search-progress" style="display: none;">
+                        <div class="progress-container">
+                            <div class="progress-status">
+                                <span id="progressStage" class="progress-stage">准备搜索</span>
+                                <span id="progressPercent" class="progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div id="progressDetail" class="progress-detail"></div>
+                            <!-- Progress Steps -->
+                            <div class="progress-steps">
+                                <div class="step" data-step="submitting">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">提交</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step" data-step="loading_themes">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">加载</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step" data-step="llm_reranking">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">LLM响应</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step" data-step="processing_results">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">处理</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step" data-step="complete">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">完成</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="searchResults" class="search-results">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                            </div>
+                            <p>输入查询内容，发现知识连接</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Add Node -->
+                <div id="addNodeView" class="view">
+                    <div class="form-container">
+                        <!-- Processing Queue -->
+                        <div id="processingQueue" class="processing-queue">
+                            <!-- Queue items rendered here by JS -->
+                        </div>
+
+                        <div class="form-header-row">
+                            <h2>添加新节点</h2>
+                            <button id="batchModeBtn" class="btn-secondary">
+                                <span id="batchModeText">批量模式</span>
+                            </button>
+                        </div>
+
+                        <!-- Single Entry Mode (default) -->
+                        <div id="singleEntryMode">
+                            <div class="form-group">
+                                <label for="rawInput">原始输入</label>
+                                <textarea
+                                    id="rawInput"
+                                    rows="6"
+                                    placeholder="记录你的想法、阅读笔记或问题..."
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Batch Entry Mode -->
+                        <div id="batchEntryMode" style="display: none;">
+                            <div class="form-group">
+                                <label for="batchInput">批量输入（每条用 --- 分隔）</label>
+                                <textarea
+                                    id="batchInput"
+                                    rows="10"
+                                    placeholder="输入多条内容，每条用 --- 分隔。例如：&#10;这是第一条内容&#10;---&#10;这是第二条内容&#10;---&#10;这是第三条内容"
+                                ></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="batchFile" class="btn-secondary" style="display: inline-block; padding: 8px 16px; cursor: pointer;">
+                                    导入文本文件
+                                </label>
+                                <input type="file" id="batchFile" accept=".txt,.md" style="display: none;">
+                                <span id="batchFileName" style="margin-left: 12px; color: var(--color-text-secondary); font-size: 0.875rem;"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="source-header">
+                                <label for="sourceType">来源类型</label>
+                                <button type="button" id="manageSourcesBtn" class="btn-link">管理来源</button>
+                            </div>
+                            <select id="sourceType">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+
+                        <!-- Source Management Modal -->
+                        <div id="sourceManagerModal" class="source-manager-modal" style="display: none;">
+                            <div class="source-manager-content">
+                                <div class="source-manager-header">
+                                    <h3>管理来源类型</h3>
+                                    <button type="button" id="closeSourceManager" class="close-btn">&times;</button>
+                                </div>
+                                <div class="source-manager-body">
+                                    <div class="source-list" id="sourceList">
+                                        <!-- Source list will be rendered here -->
+                                    </div>
+                                    <div class="add-source-form">
+                                        <h4>添加自定义来源</h4>
+                                        <input type="text" id="newSourceName" placeholder="来源名称">
+                                        <input type="text" id="newSourceDesc" placeholder="描述（可选）">
+                                        <button type="button" id="addSourceBtn" class="btn-secondary">添加</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sourceTitle">来源标题（可选）</label>
+                            <input type="text" id="sourceTitle" placeholder="例如：《思考，快与慢》">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sourceLocation">具体位置（可选）</label>
+                            <input type="text" id="sourceLocation" placeholder="例如：第三章，第45页">
+                        </div>
+
+                        <button id="submitNodeBtn" class="btn-primary">
+                            <span class="btn-text">创建节点</span>
+                            <span class="btn-loading" style="display: none;">处理中...</span>
+                        </button>
+
+                        <!-- Batch Progress -->
+                        <div id="batchProgress" style="display: none; margin-top: 16px;">
+                            <div class="batch-progress-info">
+                                <span id="batchProgressText">正在处理: 0/0</span>
+                            </div>
+                            <div class="batch-progress-bar">
+                                <div id="batchProgressFill" style="height: 100%; background: var(--color-primary); transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Stats -->
+                <div id="statsView" class="view">
+                    <div class="stats-container">
+                        <h2>知识库统计</h2>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalNodes">-</div>
+                                <div class="stat-label">节点总数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalLinks">-</div>
+                                <div class="stat-label">连接总数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="confirmedLinks">-</div>
+                                <div class="stat-label">已确认连接</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="vectorCount">-</div>
+                                <div class="stat-label">向量索引</div>
+                            </div>
+                        </div>
+
+                        <div class="tag-distribution">
+                            <h3>标签分布</h3>
+                            <div id="tagDistribution" class="tag-bars">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Outline (大纲视图) -->
+                <div id="outlineView" class="view">
+                    <div class="view-header">
+                        <h2>大纲视图</h2>
+                        <div class="view-controls">
+                            <select id="outlineSort" class="modifier-select">
+                                <option value="time">按时间排序</option>
+                                <option value="links">按连接数排序</option>
+                                <option value="tag">按标签排序</option>
+                            </select>
+                            <button id="refreshOutline" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="outline-stats-bar" id="outlineStatsBar">
+                        <span>总节点: <strong id="outlineTotal">-</strong></span>
+                        <span>孤立节点: <strong id="outlineIsolated" class="stat-warning">-</strong></span>
+                        <span>高连接节点: <strong id="outlineHighConn">-</strong></span>
+                    </div>
+                    <div id="outlineContent" class="outline-content">
+                        <div class="empty-state">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Epistemic Map (认知地图) -->
+                <div id="epistemicMapView" class="view">
+                    <div class="view-header">
+                        <h2>认知地图</h2>
+                        <div class="view-controls">
+                            <div class="legend">
+                                <span class="legend-item"><span class="dot" style="background:#00b894"></span>明确结论</span>
+                                <span class="legend-item"><span class="dot" style="background:#a29bfe"></span>推断结论</span>
+                                <span class="legend-item"><span class="dot" style="background:#00cec9"></span>跨域连接</span>
+                                <span class="legend-item"><span class="dot" style="background:#fdcb6e"></span>模糊感知</span>
+                                <span class="legend-item"><span class="dot" style="background:#e74c3c"></span>待思考</span>
+                            </div>
+                            <button id="refreshEpistemicMap" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="epistemic-container">
+                        <div class="epistemic-y-axis">
+                            <span>确定</span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span>模糊</span>
+                        </div>
+                        <div id="epistemicMapCanvas" class="epistemic-canvas">
+                            <!-- Cytoscape will render here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Graph View (关系图) -->
+                <div id="graphView" class="view">
+                    <div class="view-header">
+                        <h2>关系图</h2>
+                        <div class="view-controls">
+                            <select id="graphFilter" class="modifier-select">
+                                <option value="all">所有连接</option>
+                                <option value="confirmed">仅已确认</option>
+                            </select>
+                            <select id="graphRelationFilter" class="modifier-select">
+                                <option value="">所有关系</option>
+                                <option value="support">支持</option>
+                                <option value="contradict">矛盾</option>
+                                <option value="extend">延伸</option>
+                                <option value="source">来源</option>
+                                <option value="analogy">类比</option>
+                            </select>
+                            <button id="refreshGraph" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="graphCanvas" class="graph-canvas">
+                        <!-- Cytoscape will render here -->
+                    </div>
+                    <div class="graph-legend">
+                        <div class="legend-section">
+                            <span class="legend-title">关系类型:</span>
+                            <span class="legend-item"><span class="line" style="background:#00b894"></span>支持</span>
+                            <span class="legend-item"><span class="line" style="background:#e74c3c"></span>矛盾</span>
+                            <span class="legend-item"><span class="line" style="background:#6c5ce7"></span>延伸</span>
+                            <span class="legend-item"><span class="line" style="background:#fdcb6e"></span>来源</span>
+                            <span class="legend-item"><span class="line" style="background:#00cec9"></span>类比</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation (Desktop) -->
+        <nav class="bottom-nav desktop-only">
+            <button class="nav-item active" data-view="searchView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <span>查询</span>
+            </button>
+            <button class="nav-item" data-view="addNodeView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>添加</span>
+            </button>
+            <button class="nav-item" data-view="outlineView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>大纲</span>
+            </button>
+            <button class="nav-item" data-view="epistemicMapView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <span>认知地图</span>
+            </button>
+            <button class="nav-item" data-view="graphView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                <span>关系图</span>
+            </button>
+            <button class="nav-item" data-view="statsView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>统计</span>
+            </button>
+        </nav>
+
+        <!-- Bottom Navigation (Mobile) -->
+        <nav class="mobile-bottom-nav">
+            <button class="nav-item active" data-view="searchView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <span>查询</span>
+            </button>
+            <button class="nav-item" data-view="addNodeView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>添加</span>
+            </button>
+            <button class="nav-item" data-view="outlineView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>大纲</span>
+            </button>
+            <button class="nav-item" data-view="statsView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>统计</span>
+            </button>
+        </nav>
+
+        <!-- Node Detail Multi-Window System -->
+        <div id="nodeModal" class="modal">
+            <div class="multi-window-container">
+                <!-- Main Window (Primary Node Detail) -->
+                <div class="main-window" id="mainWindow">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>节点详情</h3>
+                            <button class="close-btn" id="closeModal">&times;</button>
+                        </div>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Side Windows Stack -->
+                <div class="side-windows" id="sideWindows">
+                    <!-- Stacked windows will appear here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <!-- Cytoscape.js for graph visualization -->
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="/static/js/views.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+{
+    "name": "Rhizome Thinking",
+    "short_name": "Rhizome",
+    "description": "个人知识库 - 语义检索与跨设备访问",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f0f1a",
+    "theme_color": "#1a1a2e",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "zh-CN",
+    "icons": [
+        {
+            "src": "/static/images/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/static/images/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": ["productivity", "education"],
+    "screenshots": [
+        {
+            "src": "/static/images/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "搜索界面"
+        },
+        {
+            "src": "/static/images/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "移动端搜索"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "搜索",
+            "short_name": "搜索",
+            "description": "快速搜索知识库",
+            "url": "/?view=search",
+            "icons": [{ "src": "/static/images/icon-96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "添加节点",
+            "short_name": "添加",
+            "description": "添加新的知识节点",
+            "url": "/?view=add",
+            "icons": [{ "src": "/static/images/icon-96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "认知地图",
+            "short_name": "地图",
+            "description": "查看认知地图",
+            "url": "/?view=map",
+            "icons": [{ "src": "/static/images/icon-96.png", "sizes": "96x96" }]
+        }
+    ]
+}

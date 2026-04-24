@@ -1,0 +1,61 @@
+# Environment variables - NEVER commit real API keys
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Storage data (contains user content)
+storage/nodes/*.md
+storage/chroma/
+storage/metadata/*.json
+storage/themes/*.json
+storage/metadata/node_themes/*.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Trae specific
+.trae/rules/project_rules.md
+
+# Temporary files
+*.tmp
+.temp/
