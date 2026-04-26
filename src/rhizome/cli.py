@@ -730,6 +730,267 @@ def query(
         sys.exit(1)
 
 
+@cli.group()
+def backup() -> None:
+    """备份管理命令"""
+    pass
+
+
+@backup.command("create")
+@click.option("--name", help="备份名称（可选）")
+@click.pass_context
+def backup_create(ctx: click.Context, name: Optional[str]) -> None:
+    """创建数据备份"""
+    try:
+        from rhizome.core.backup_manager import BackupManager
+
+        manager = BackupManager()
+        backup_path = manager.backup(output_path=name)
+        info = manager.get_backup_info(str(backup_path))
+
+        console.print(f"[green]✓[/green] 备份创建成功！")
+        console.print(f"  文件名: {info['name']}")
+        console.print(f"  节点数: {info['node_count']}")
+        console.print(f"  大小: {info['size_mb']} MB")
+        console.print(f"  时间: {info['created_at']}")
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 创建备份失败: {e}")
+        sys.exit(1)
+
+
+@backup.command("list")
+def backup_list() -> None:
+    """列出所有备份"""
+    try:
+        from rhizome.core.backup_manager import BackupManager
+
+        manager = BackupManager()
+        backups = manager.list_backups()
+
+        if not backups:
+            console.print("[yellow]暂无备份[/yellow]")
+            return
+
+        table = Table(title="备份列表")
+        table.add_column("名称", style="cyan")
+        table.add_column("创建时间", style="dim")
+        table.add_column("节点数", justify="right")
+        table.add_column("大小", justify="right")
+
+        for backup in backups:
+            table.add_row(
+                backup["name"],
+                backup["created_at"],
+                str(backup["node_count"]),
+                f"{backup['size_mb']} MB"
+            )
+
+        console.print(table)
+    except Exception as e:
+        console.print(f"[red]✗[/red] 获取备份列表失败: {e}")
+        sys.exit(1)
+
+
+@backup.command("restore")
+@click.argument("backup_name")
+@click.option("--force", is_flag=True, help="清空现有数据后恢复")
+@click.pass_context
+def backup_restore(ctx: click.Context, backup_name: str, force: bool) -> None:
+    """从备份恢复数据"""
+    try:
+        from rhizome.core.backup_manager import BackupManager
+
+        if not force:
+            console.print("[yellow]⚠ 警告: 恢复备份将覆盖现有数据[/yellow]")
+            console.print("[dim]使用 --force 参数确认覆盖[/dim]")
+            sys.exit(1)
+
+        manager = BackupManager()
+        backup_path = manager.backups_dir / backup_name
+
+        if not backup_path.exists():
+            console.print(f"[red]✗[/red] 备份文件不存在: {backup_name}")
+            sys.exit(1)
+
+        result = manager.restore(str(backup_path), confirm=True)
+        console.print(f"[green]✓[/green] {result['message']}")
+        console.print(f"  恢复节点数: {result['restored_nodes']}")
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 恢复备份失败: {e}")
+        sys.exit(1)
+
+
+@backup.command("delete")
+@click.argument("backup_name")
+@click.pass_context
+def backup_delete(ctx: click.Context, backup_name: str) -> None:
+    """删除备份文件"""
+    try:
+        from rhizome.core.backup_manager import BackupManager
+
+        manager = BackupManager()
+        if manager.delete_backup(backup_name):
+            console.print(f"[green]✓[/green] 备份已删除: {backup_name}")
+        else:
+            console.print(f"[red]✗[/red] 备份不存在: {backup_name}")
+            sys.exit(1)
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 删除备份失败: {e}")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--proposition", help="命题关键字")
+@click.option("--raw-content", help="原始内容关键字")
+@click.option("--tag", multiple=True, help="标签筛选")
+@click.option("--from-date", help="开始日期 (YYYY-MM-DD)")
+@click.option("--to-date", help="结束日期 (YYYY-MM-DD)")
+@click.option("-l", "--limit", default=50, help="最大结果数")
+@click.option("--sort-by", type=click.Choice(["time", "proposition"]), default="time", help="排序方式")
+@click.pass_context
+def find(
+    ctx: click.Context,
+    proposition: Optional[str],
+    raw_content: Optional[str],
+    tag: tuple,
+    from_date: Optional[str],
+    to_date: Optional[str],
+    limit: int,
+    sort_by: str
+) -> None:
+    """精准查询节点"""
+    try:
+        from rhizome.core.node_store import NodeStore
+        from datetime import datetime
+
+        store = NodeStore()
+
+        # Parse dates
+        start_date = None
+        end_date = None
+        if from_date:
+            start_date = datetime.strptime(from_date, "%Y-%m-%d")
+        if to_date:
+            end_date = datetime.strptime(to_date, "%Y-%m-%d")
+
+        results = store.precise_search(
+            proposition_query=proposition,
+            raw_content_query=raw_content,
+            tags=list(tag) if tag else None,
+            start_date=start_date,
+            end_date=end_date,
+            sort_by=sort_by,
+            limit=limit
+        )
+
+        if not results:
+            console.print("[yellow]未找到匹配的节点[/yellow]")
+            return
+
+        console.print(f"[dim]找到 {len(results)} 个节点:[/dim]")
+        console.print()
+
+        for node in results:
+            console.print(f"[bold]{node.processed.proposition[:80]}{'...' if len(node.processed.proposition) > 80 else ''}[/bold]")
+            console.print(f"  [dim]ID: {node.id[:8]} | 时间: {node.timestamp.strftime('%Y-%m-%d %H:%M')} | 标签: {', '.join(node.tags)}[/dim]")
+            console.print()
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 查询失败: {e}")
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument("node_id")
+@click.option("--proposition", help="新命题")
+@click.option("--raw-input", help="新原始内容")
+@click.option("--tags", help="标签（逗号分隔）")
+@click.option("--source-title", help="来源标题")
+@click.option("--source-location", help="来源位置")
+@click.pass_context
+def edit(
+    ctx: click.Context,
+    node_id: str,
+    proposition: Optional[str],
+    raw_input: Optional[str],
+    tags: Optional[str],
+    source_title: Optional[str],
+    source_location: Optional[str]
+) -> None:
+    """编辑节点"""
+    try:
+        store = get_store()
+
+        if not store.exists(node_id):
+            console.print(f"[red]✗[/red] 节点不存在: {node_id}")
+            sys.exit(1)
+
+        tag_list = tags.split(",") if tags else None
+
+        updated = store.update_node(
+            node_id=node_id,
+            proposition=proposition,
+            raw_input=raw_input,
+            tags=tag_list,
+            source_title=source_title,
+            source_location=source_location
+        )
+
+        if updated:
+            console.print(f"[green]✓[/green] 节点已更新: {node_id[:8]}")
+        else:
+            console.print(f"[red]✗[/red] 更新失败")
+            sys.exit(1)
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 编辑失败: {e}")
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument("node_id")
+@click.option("--force", is_flag=True, help="强制删除，不提示")
+@click.pass_context
+def delete(
+    ctx: click.Context,
+    node_id: str,
+    force: bool
+) -> None:
+    """删除节点"""
+    try:
+        store = get_store()
+
+        if not store.exists(node_id):
+            console.print(f"[red]✗[/red] 节点不存在: {node_id}")
+            sys.exit(1)
+
+        node = store.get(node_id)
+        if not force:
+            console.print(f"[yellow]即将删除节点:[/yellow]")
+            console.print(f"  {node.processed.proposition[:80]}{'...' if len(node.processed.proposition) > 80 else ''}")
+            console.print("[dim]使用 --force 参数确认删除[/dim]")
+            sys.exit(1)
+
+        store.delete(node_id)
+        console.print(f"[green]✓[/green] 节点已删除: {node_id[:8]}")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 删除失败: {e}")
+        sys.exit(1)
+
+
 def main() -> None:
     """CLI入口点"""
     cli()

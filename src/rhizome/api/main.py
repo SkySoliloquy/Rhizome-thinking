@@ -1,6 +1,7 @@
 """FastAPI application for Rhizome Thinking."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
 from rhizome.config import settings
-from rhizome.api.routes import nodes, query, links, stats, sources, themes, search_stream, search_optimized, outline, epistemic_map, graph_view
+from rhizome.api.routes import nodes, query, links, stats, sources, themes, search_stream, search_optimized, outline, epistemic_map, graph_view, backup
+
+# Package-relative paths (independent of CWD)
+_PACKAGE_DIR = Path(__file__).resolve().parent.parent  # src/rhizome/
+_STATIC_DIR = _PACKAGE_DIR / "web" / "static"
+_TEMPLATE_INDEX = _PACKAGE_DIR / "web" / "templates" / "index.html"
 
 
 @asynccontextmanager
@@ -33,7 +39,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],  # Configure appropriately for production
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -50,21 +56,18 @@ def create_app() -> FastAPI:
     app.include_router(outline.router, prefix="/api/v1", tags=["outline"])
     app.include_router(epistemic_map.router, prefix="/api/v1", tags=["epistemic_map"])
     app.include_router(graph_view.router, prefix="/api/v1", tags=["graph_view"])
-    
+    app.include_router(backup.router, prefix="/api/v1", tags=["backup"])
+
     # Mount static files
-    try:
-        app.mount("/static", StaticFiles(directory="src/rhizome/web/static"), name="static")
-    except RuntimeError:
-        # Static directory might not exist yet
-        pass
-    
+    if _STATIC_DIR.is_dir():
+        app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
     # Root endpoint - serve PWA
     @app.get("/", response_class=HTMLResponse)
     async def root():
         """Serve the PWA frontend."""
         try:
-            with open("src/rhizome/web/templates/index.html", "r", encoding="utf-8") as f:
-                return f.read()
+            return _TEMPLATE_INDEX.read_text(encoding="utf-8")
         except FileNotFoundError:
             return """
             <!DOCTYPE html>

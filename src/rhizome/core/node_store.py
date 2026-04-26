@@ -1,9 +1,12 @@
 """Node storage management for Rhizome Thinking."""
 
 import json
-from datetime import datetime
+import os
+import re
+import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from rhizome.config import settings
 from rhizome.core.models import Node
@@ -42,10 +45,18 @@ class NodeStore:
         return {"nodes": {}, "last_updated": datetime.now().isoformat()}
     
     def _save_index(self) -> None:
-        """Save the nodes index to disk."""
+        """Save the nodes index to disk (atomic write)."""
         self._index["last_updated"] = datetime.now().isoformat()
-        with open(self.index_path, "w", encoding="utf-8") as f:
-            json.dump(self._index, f, indent=2, ensure_ascii=False)
+        tmp_fd, tmp_path = tempfile.mkstemp(
+            suffix=".json", prefix=".nodes_index.", dir=self.metadata_dir
+        )
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                json.dump(self._index, f, indent=2, ensure_ascii=False)
+            os.replace(tmp_path, self.index_path)
+        except Exception:
+            os.unlink(tmp_path)
+            raise
     
     def _get_node_path(self, node_id: str) -> Path:
         """Get the file path for a node."""
@@ -65,15 +76,26 @@ class NodeStore:
     
     def save(self, node: Node) -> None:
         """Save a node to storage.
-        
+
+        Uses atomic write (temp file + rename) to prevent corruption from
+        concurrent writes or crashes mid-write.
+
         Args:
             node: The node to save
         """
-        # Save markdown file
+        # Atomic write: write to temp file then rename
         node_path = self._get_node_path(node.id)
-        with open(node_path, "w", encoding="utf-8") as f:
-            f.write(node.to_markdown())
-        
+        tmp_fd, tmp_path = tempfile.mkstemp(
+            suffix=".md", prefix=f".{node.id}.", dir=self.nodes_dir
+        )
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                f.write(node.to_markdown())
+            os.replace(tmp_path, node_path)  # Atomic on POSIX & Windows
+        except Exception:
+            os.unlink(tmp_path)
+            raise
+
         # Update index
         self._update_index(node)
     
@@ -280,9 +302,216 @@ class NodeStore:
         
         return True
     
+    def reload(self) -> None:
+        """Reload the index from disk (hot reload support)."""
+        self._index = self._load_index()
+
+    def update_node(
+        self,
+        node_id: str,
+        proposition: Optional[str] = None,
+        raw_input: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        open_questions: Optional[list[str]] = None,
+        source_title: Optional[str] = None,
+        source_location: Optional[str] = None,
+        auto_save: bool = True
+    ) -> Optional[Node]:
+        """Update node fields.
+
+        Args:
+            node_id: The node ID
+            proposition: New proposition text
+            raw_input: New raw input text
+            tags: New tags list
+            open_questions: New open questions list
+            source_title: New source title
+            source_location: New source location
+            auto_save: Whether to save immediately
+
+        Returns:
+            Updated node if found, None otherwise
+        """
+        node = self.get(node_id)
+        if not node:
+            return None
+
+        # Update fields if provided
+        if proposition is not None:
+            node.processed.proposition = proposition
+        if raw_input is not None:
+            node.raw_input = raw_input
+        if tags is not None:
+            node.tags = tags
+        if open_questions is not None:
+            node.processed.open_questions = open_questions
+        if source_title is not None:
+            node.source.title = source_title
+        if source_location is not None:
+            node.source.location = source_location
+
+        if auto_save:
+            self.save(node)
+
+        return node
+
+    def search_by_raw_content(
+        self,
+        query: str,
+        limit: int = 10,
+        fuzzy: bool = False
+    ) -> list[tuple[Node, float]]:
+        """Search nodes by raw content.
+
+        Args:
+            query: Search query
+            limit: Maximum results
+            fuzzy: Enable fuzzy matching
+
+        Returns:
+            List of (node, score) tuples
+        """
+        results = []
+        query_lower = query.lower()
+
+        for entry in self._index["nodes"].values():
+            node = self.get(entry["id"])
+            if not node:
+                continue
+
+            raw_lower = node.raw_input.lower()
+
+            if fuzzy:
+                if self._fuzzy_match(query_lower, raw_lower):
+                    score = 0.6
+                    results.append((node, score))
+            else:
+                if query_lower in raw_lower:
+                    score = 0.8
+                    results.append((node, score))
+
+            if len(results) >= limit:
+                break
+
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+
+    def _fuzzy_match(self, pattern: str, text: str) -> bool:
+        """Check if pattern matches text fuzzily (characters in order)."""
+        pattern_idx = 0
+        for char in text:
+            if pattern_idx < len(pattern) and char == pattern[pattern_idx]:
+                pattern_idx += 1
+        return pattern_idx == len(pattern)
+
+    def search_by_date_range(
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        limit: int = 100
+    ) -> list[tuple[Node, float]]:
+        """Search nodes by date range.
+
+        Args:
+            start_date: Start date (inclusive)
+            end_date: End date (inclusive)
+            limit: Maximum results
+
+        Returns:
+            List of (node, score) tuples (score=1.0 since filtering is by date, not relevance)
+        """
+        results = []
+
+        for entry in self._index["nodes"].values():
+            timestamp = datetime.fromisoformat(entry["timestamp"])
+
+            if start_date and timestamp < start_date:
+                continue
+            if end_date and timestamp > end_date:
+                continue
+
+            node = self.get(entry["id"])
+            if node:
+                results.append((node, 1.0))
+
+            if len(results) >= limit:
+                break
+
+        results.sort(key=lambda x: x[0].timestamp, reverse=True)
+        return results
+
+    def precise_search(
+        self,
+        proposition_query: Optional[str] = None,
+        raw_content_query: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        sort_by: Literal["time", "proposition"] = "time",
+        limit: int = 100
+    ) -> list[Node]:
+        """Precise search with combined conditions (AND logic).
+
+        Args:
+            proposition_query: Search in proposition
+            raw_content_query: Search in raw content
+            tags: Filter by tags
+            start_date: Start date filter
+            end_date: End date filter
+            sort_by: Sort field
+            limit: Maximum results
+
+        Returns:
+            List of matching nodes
+        """
+        results = []
+
+        for entry in self._index["nodes"].values():
+            node = self.get(entry["id"])
+            if not node:
+                continue
+
+            # Check proposition query
+            if proposition_query:
+                prop_lower = node.processed.proposition.lower()
+                if proposition_query.lower() not in prop_lower:
+                    continue
+
+            # Check raw content query
+            if raw_content_query:
+                raw_lower = node.raw_input.lower()
+                if raw_content_query.lower() not in raw_lower:
+                    continue
+
+            # Check tags
+            if tags:
+                if not any(tag in node.tags for tag in tags):
+                    continue
+
+            # Check date range
+            if start_date or end_date:
+                timestamp = datetime.fromisoformat(entry["timestamp"])
+                if start_date and timestamp < start_date:
+                    continue
+                if end_date and timestamp > end_date:
+                    continue
+
+            results.append(node)
+
+            if len(results) >= limit:
+                break
+
+        # Sort results
+        if sort_by == "time":
+            results.sort(key=lambda n: n.timestamp, reverse=True)
+        elif sort_by == "proposition":
+            results.sort(key=lambda n: n.processed.proposition)
+
+        return results
+
     def get_stats(self) -> dict:
         """Get statistics about the stored nodes.
-        
+
         Returns:
             Dictionary with statistics
         """
@@ -295,13 +524,13 @@ class NodeStore:
             entry.get("confirmed_link_count", 0)
             for entry in self._index["nodes"].values()
         )
-        
+
         # Count tags
         tag_counts = {}
         for entry in self._index["nodes"].values():
             for tag in entry.get("tags", []):
                 tag_counts[tag] = tag_counts.get(tag, 0) + 1
-        
+
         return {
             "total_nodes": total_nodes,
             "total_links": total_links,

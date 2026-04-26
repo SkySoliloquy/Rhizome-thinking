@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import logging
 import time
 from typing import Optional, List, Tuple, Dict, Any
 from dataclasses import dataclass
@@ -13,6 +14,8 @@ from rhizome.core.theme_store import ThemeStore
 from rhizome.core.node_store import NodeStore
 from rhizome.retrieval.llm_search import LLMSearchReranker
 from rhizome.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -164,7 +167,7 @@ class OptimizedSearch:
             try:
                 self.reranker = LLMSearchReranker()
             except Exception as e:
-                print(f"Warning: Failed to initialize LLM reranker: {e}")
+                logger.warning(f"Failed to initialize LLM reranker: {e}")
     
     async def search_with_timeout(
         self,
@@ -179,19 +182,14 @@ class OptimizedSearch:
             Tuple of (matched_themes, cache_status)
             cache_status: "hit", "miss", "timeout", "error", or None
         """
-        import logging
-        logger = logging.getLogger(__name__)
-        
         selected_tags = modifiers_data.get("tags", [])
         time_range = modifiers_data.get("time_range", "all")
         use_llm = modifiers_data.get("use_llm_rerank", True)
         search_mode = modifiers_data.get("search_mode", "balanced")
         
-        # 使用 print 确保日志输出
-        print(f"[LLM Search] Starting search for: '{anchor}'")
-        print(f"[LLM Search] use_llm={use_llm}, reranker_exists={self.reranker is not None}, api_key_exists={bool(settings.minimax_api_key)}")
         logger.info(f"[LLM Search] Starting search for: '{anchor}'")
         logger.info(f"[LLM Search] use_llm={use_llm}, reranker_exists={self.reranker is not None}, api_key_exists={bool(settings.minimax_api_key)}")
+        logger.info(f"[LLM Search] selected_tags={selected_tags}, time_range={time_range}, search_mode={search_mode}")
         
         # Try cache first
         cached_results = self.cache.get(anchor, selected_tags, time_range, search_mode)
@@ -203,13 +201,32 @@ class OptimizedSearch:
         all_themes = self.theme_cache.get_themes()
         logger.info(f"[LLM Search] Loaded {len(all_themes)} themes from cache")
         
-        # Filter themes
+        # Filter themes by tags
         if selected_tags:
             filtered_themes = [t for t in all_themes if t.tag in selected_tags]
+            logger.info(f"[LLM Search] After tag filtering: {len(filtered_themes)} themes (selected_tags={selected_tags})")
         else:
             filtered_themes = all_themes
-        
-        logger.info(f"[LLM Search] After filtering: {len(filtered_themes)} themes")
+
+        # Filter themes by time range
+        if time_range and time_range != "all":
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            if time_range == "last_week":
+                cutoff = now - timedelta(days=7)
+            elif time_range == "last_month":
+                cutoff = now - timedelta(days=30)
+            elif time_range == "last_3_months":
+                cutoff = now - timedelta(days=90)
+            else:
+                cutoff = None
+
+            if cutoff:
+                original_count = len(filtered_themes)
+                filtered_themes = [t for t in filtered_themes if t.created_at >= cutoff]
+                logger.info(f"[LLM Search] After time filtering ({time_range}): {len(filtered_themes)} themes (filtered {original_count - len(filtered_themes)})")
+
+        logger.info(f"[LLM Search] Final filtered themes: {len(filtered_themes)}")
         
         if not filtered_themes:
             logger.warning(f"[LLM Search] No themes available after filtering")
@@ -222,12 +239,15 @@ class OptimizedSearch:
                 # Run LLM reranking with timeout
                 logger.info(f"[LLM Search] Calling LLM API (timeout={llm_timeout}s)...")
                 matched_themes = await asyncio.wait_for(
-                    self._async_rerank(anchor, filtered_themes, time_range, search_mode),
+                    self._async_rerank(anchor, filtered_themes, time_range, search_mode, selected_tags),
                     timeout=llm_timeout
                 )
                 
                 logger.info(f"[LLM Search] LLM reranking successful, got {len(matched_themes)} results")
-                
+
+                # Enforce per-mode result limits (LLM may not follow prompt instructions)
+                matched_themes = self._apply_mode_limit(matched_themes, search_mode)
+
                 # Cache successful results
                 self.cache.set(anchor, selected_tags, time_range, matched_themes, search_mode=search_mode)
                 return matched_themes, "miss"
@@ -236,6 +256,7 @@ class OptimizedSearch:
                 # LLM timeout - fall back to traditional search
                 logger.warning(f"[LLM Search] LLM timeout after {llm_timeout}s, falling back to traditional search")
                 matched_themes = self._traditional_search(anchor, filtered_themes)
+                matched_themes = self._apply_mode_limit(matched_themes, search_mode)
                 # Cache fallback results with shorter TTL (2 min)
                 self.cache.set(anchor, selected_tags, time_range, matched_themes, ttl=120, search_mode=search_mode)
                 return matched_themes, "timeout"
@@ -246,6 +267,7 @@ class OptimizedSearch:
                 import traceback
                 logger.error(f"[LLM Search] Traceback: {traceback.format_exc()}")
                 matched_themes = self._traditional_search(anchor, filtered_themes)
+                matched_themes = self._apply_mode_limit(matched_themes, search_mode)
                 # Cache fallback results with shorter TTL (2 min)
                 self.cache.set(anchor, selected_tags, time_range, matched_themes, ttl=120, search_mode=search_mode)
                 return matched_themes, "error"
@@ -260,6 +282,7 @@ class OptimizedSearch:
                 reason.append("no_api_key")
             logger.warning(f"[LLM Search] LLM not available ({', '.join(reason)}), using traditional search")
             matched_themes = self._traditional_search(anchor, filtered_themes)
+            matched_themes = self._apply_mode_limit(matched_themes, search_mode)
             # Cache traditional search results with shorter TTL (3 min)
             self.cache.set(anchor, selected_tags, time_range, matched_themes, ttl=180, search_mode=search_mode)
             return matched_themes, None
@@ -269,15 +292,21 @@ class OptimizedSearch:
         anchor: str,
         themes: List[Theme],
         time_range: str,
-        search_mode: str = "balanced"
+        search_mode: str = "balanced",
+        selected_tags: List[str] = None
     ) -> List[Tuple[Theme, float]]:
         """Async wrapper for LLM reranking."""
         loop = asyncio.get_event_loop()
-        
+
         def _rerank():
-            filters = {"time_range": time_range, "tags": [], "search_mode": search_mode}
+            filters = {
+                "time_range": time_range,
+                "tags": selected_tags or [],
+                "search_mode": search_mode
+            }
+            logger.info(f"[LLM Search] Filters passed to LLM: {filters}")
             return self.reranker.rerank_themes(anchor, themes, filters)
-        
+
         return await loop.run_in_executor(None, _rerank)
     
     def _traditional_search(
@@ -314,10 +343,27 @@ class OptimizedSearch:
             
             theme_scores.append((theme, similarity))
         
-        # Sort by similarity
+        # Filter out zero-score themes and sort by similarity
+        theme_scores = [(t, s) for t, s in theme_scores if s > 0.0]
         theme_scores.sort(key=lambda x: x[1], reverse=True)
         return theme_scores
     
+    def _apply_mode_limit(
+        self,
+        themes: List[Tuple[Theme, float]],
+        search_mode: str
+    ) -> List[Tuple[Theme, float]]:
+        """Truncate results to per-mode limits."""
+        mode_limits = {
+            "strict": 5,
+            "balanced": 10,
+            "explore": 20
+        }
+        max_results = mode_limits.get(search_mode, 10)
+        if len(themes) > max_results:
+            return themes[:max_results]
+        return themes
+
     async def parallel_search(
         self,
         anchor: str,
@@ -370,6 +416,15 @@ class OptimizedSearch:
 
 # Global search optimizer instance
 _search_optimizer: Optional[OptimizedSearch] = None
+
+
+def invalidate_theme_cache() -> None:
+    """Invalidate the global theme cache to force refresh on next access.
+
+    Call this after creating, updating, or deleting nodes.
+    """
+    if _search_optimizer is not None:
+        _search_optimizer.theme_cache.invalidate()
 
 
 def get_search_optimizer(query_engine) -> OptimizedSearch:

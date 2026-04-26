@@ -132,6 +132,46 @@ class APIClient {
             method: 'DELETE'
         });
     }
+
+    // Node update
+    async updateNode(id, data) {
+        return this.request(`/api/v1/nodes/${id}`, {
+            method: 'PUT',
+            body: data
+        });
+    }
+
+    // Precise query
+    async preciseQuery(data) {
+        return this.request('/api/v1/query/precise', {
+            method: 'POST',
+            body: data
+        });
+    }
+
+    // Backups
+    async getBackups() {
+        return this.request('/api/v1/backups');
+    }
+
+    async createBackup() {
+        return this.request('/api/v1/backups', {
+            method: 'POST'
+        });
+    }
+
+    async restoreBackup(backupName, confirm) {
+        return this.request(`/api/v1/backups/${encodeURIComponent(backupName)}/restore`, {
+            method: 'POST',
+            body: { confirm }
+        });
+    }
+
+    async deleteBackup(backupName) {
+        return this.request(`/api/v1/backups/${encodeURIComponent(backupName)}`, {
+            method: 'DELETE'
+        });
+    }
 }
 
 // ===== App State =====
@@ -661,6 +701,14 @@ const windowManager = {
     openThemeWindow(themeData) {
         const theme = themeData.theme;
         const nodes = themeData.nodes || [];
+
+        // Check if this theme window already exists
+        const existingWindow = this.windows.find(w => w.isTheme && w.themeId === theme.id);
+        if (existingWindow) {
+            // Highlight existing window instead of creating a new one
+            this.highlightWindow(existingWindow.id);
+            return;
+        }
 
         // Ensure modal is open
         const modal = document.getElementById('nodeModal');
@@ -1564,6 +1612,9 @@ async function performSearch() {
 
 function performStreamingSearch(requestData) {
     return new Promise((resolve, reject) => {
+        // Reset the result processed flag for new search
+        searchResultProcessed = false;
+        
         const query = requestData.anchor;
         const displayLimit = requestData.modifiers?.limit || 20;  // 前端显示限制
         
@@ -1644,13 +1695,20 @@ function performStreamingSearch(requestData) {
     });
 }
 
+// Track if result has been processed to avoid duplicate toasts
+let searchResultProcessed = false;
+
 function handleStreamData(data, query, displayLimit = 20) {
     if (data.type === 'progress') {
         searchProgress.updateProgress(data.percent, data.message, data.detail);
         searchProgress.updateSteps(data.stage);
     } else if (data.type === 'result') {
-        renderThemeResults(data.results, query, displayLimit, data.total_themes);
-        ui.showToast(`找到 ${data.total_themes} 个主题`, 'success');
+        // Only process result once to avoid duplicate toasts
+        if (!searchResultProcessed) {
+            searchResultProcessed = true;
+            renderThemeResults(data.results, query, displayLimit, data.total_themes);
+            ui.showToast(`找到 ${data.total_themes} 个主题`, 'success');
+        }
     } else if (data.type === 'error') {
         throw new Error(data.message);
     }
@@ -1822,22 +1880,6 @@ function renderThemeResults(results, query, displayLimit = 20, totalThemes = 0) 
         }
     });
     
-    // Also add touchend for faster mobile response
-    container.addEventListener('touchend', (e) => {
-        const btn = e.target.closest('.theme-open-btn');
-        if (!btn) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Trigger the click handler
-        const clickEvent = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-        });
-        btn.dispatchEvent(clickEvent);
-    });
 }
 
 // 显示所有主题结果（不截断）
@@ -2219,7 +2261,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.stopPropagation();
         console.log('[Mobile Debug] Search triggered');
-        performSearch();
+
+        // Check query mode
+        const activeMode = document.querySelector('.query-mode-btn.active')?.dataset.mode;
+        if (activeMode === 'precise') {
+            performPreciseSearch();
+        } else {
+            performSearch();
+        }
     };
     
     searchBtn.addEventListener('click', handleSearch);
@@ -2229,11 +2278,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            const activeMode = document.querySelector('.query-mode-btn.active')?.dataset.mode;
+            if (activeMode === 'precise') {
+                performPreciseSearch();
+            } else {
+                performSearch();
+            }
+        }
     });
     // Also handle mobile "Go" button on virtual keyboard
     searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            const activeMode = document.querySelector('.query-mode-btn.active')?.dataset.mode;
+            if (activeMode === 'precise') {
+                performPreciseSearch();
+            } else {
+                performSearch();
+            }
+        }
     });
 
     // Tag filters
@@ -2704,6 +2767,555 @@ const mobileGestures = {
 if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     mobileGestures.init();
 }
+
+// ===== Query Mode Switching =====
+function initQueryModeSwitching() {
+    const queryModeBtns = document.querySelectorAll('.query-mode-btn');
+    const semanticOptions = document.getElementById('semanticSearchOptions');
+    const preciseOptions = document.getElementById('preciseSearchOptions');
+    const searchInput = document.getElementById('searchInput');
+
+    queryModeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            queryModeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const mode = btn.dataset.mode;
+            if (mode === 'semantic') {
+                semanticOptions.style.display = 'block';
+                preciseOptions.style.display = 'none';
+                searchInput.placeholder = '输入语义锚点...';
+            } else {
+                semanticOptions.style.display = 'none';
+                preciseOptions.style.display = 'block';
+                searchInput.placeholder = '输入搜索内容（可选）...';
+            }
+        });
+    });
+}
+
+// ===== Precise Query =====
+async function performPreciseSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const propositionQuery = document.getElementById('precisePropositionQuery').value.trim();
+    const rawContentQuery = document.getElementById('preciseRawContentQuery').value.trim();
+    const startDate = document.getElementById('preciseStartDate').value;
+    const endDate = document.getElementById('preciseEndDate').value;
+    const sortBy = document.getElementById('preciseSortBy').value;
+    const limit = parseInt(document.getElementById('limitSelect').value);
+
+    const searchBtn = document.getElementById('searchBtn');
+    ui.showLoading(searchBtn);
+
+    try {
+        const requestData = {
+            search_mode: 'precise',
+            proposition_query: propositionQuery || null,
+            raw_content_query: rawContentQuery || null,
+            start_date: startDate ? new Date(startDate).toISOString() : null,
+            end_date: endDate ? new Date(endDate + 'T23:59:59').toISOString() : null,
+            tags: state.selectedTags,
+            sort_by: sortBy,
+            limit: limit
+        };
+
+        const response = await api.preciseQuery(requestData);
+        renderPreciseResults(response.results);
+        ui.showToast(`找到 ${response.total} 个结果`);
+    } catch (error) {
+        ui.showToast(`查询失败: ${error.message}`, 'error');
+        console.error('Precise search error:', error);
+    } finally {
+        ui.hideLoading(searchBtn);
+    }
+}
+
+function renderPreciseResults(results) {
+    const container = document.getElementById('searchResults');
+
+    if (!results || results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <p>未找到匹配的节点</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="precise-results">';
+
+    results.forEach((item, index) => {
+        const tagsHtml = ui.renderTagsInOrder(item.tags, 'node-tag');
+        html += `
+            <div class="node-card precise-result" data-node-id="${item.id}">
+                <div class="node-card-header">
+                    <div class="node-proposition">${escapeHtml(item.proposition)}</div>
+                </div>
+                <div class="node-meta">
+                    <div class="node-tags">${tagsHtml}</div>
+                    <span>${new Date(item.timestamp).toLocaleString('zh-CN')}</span>
+                </div>
+                <div class="node-actions">
+                    <button class="action-btn view-btn" data-node-id="${item.id}">查看</button>
+                    <button class="action-btn edit-btn" data-node-id="${item.id}">编辑</button>
+                    <button class="action-btn delete-btn" data-node-id="${item.id}">删除</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Add event listeners
+    container.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => showNodeDetail(btn.dataset.nodeId));
+    });
+    container.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.dataset.nodeId));
+    });
+    container.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => openDeleteModal(btn.dataset.nodeId));
+    });
+}
+
+// ===== Node Editing =====
+let currentEditingNodeId = null;
+
+async function openEditModal(nodeId) {
+    try {
+        const response = await api.getNode(nodeId);
+        const node = response.node;
+        currentEditingNodeId = nodeId;
+
+        document.getElementById('editProposition').value = node.processed.proposition;
+        document.getElementById('editRawInput').value = node.raw_input;
+        document.getElementById('editSourceTitle').value = node.source.title || '';
+        document.getElementById('editSourceLocation').value = node.source.location || '';
+        document.getElementById('editOpenQuestions').value = (node.processed.open_questions || []).join('\n');
+
+        // Set tags
+        document.querySelectorAll('#editTags input[type="checkbox"]').forEach(cb => {
+            cb.checked = node.tags.includes(cb.value);
+        });
+
+        document.getElementById('nodeEditModal').style.display = 'flex';
+    } catch (error) {
+        ui.showToast(`加载节点失败: ${error.message}`, 'error');
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('nodeEditModal').style.display = 'none';
+    currentEditingNodeId = null;
+}
+
+async function saveNodeEdit() {
+    if (!currentEditingNodeId) return;
+
+    const tags = Array.from(document.querySelectorAll('#editTags input[type="checkbox"]:checked')).map(cb => cb.value);
+    const openQuestions = document.getElementById('editOpenQuestions').value.split('\n').filter(q => q.trim());
+
+    const data = {
+        proposition: document.getElementById('editProposition').value.trim(),
+        raw_input: document.getElementById('editRawInput').value.trim(),
+        tags: tags,
+        open_questions: openQuestions,
+        source_title: document.getElementById('editSourceTitle').value.trim() || null,
+        source_location: document.getElementById('editSourceLocation').value.trim() || null
+    };
+
+    try {
+        const response = await api.updateNode(currentEditingNodeId, data);
+        ui.showToast('节点已更新');
+        closeEditModal();
+
+        // Refresh display if the node is currently shown
+        refreshNodeDisplay(currentEditingNodeId, response.node);
+    } catch (error) {
+        ui.showToast(`更新失败: ${error.message}`, 'error');
+    }
+}
+
+function refreshNodeDisplay(nodeId, node) {
+    // Update in search results if present
+    const card = document.querySelector(`[data-node-id="${nodeId}"]`);
+    if (card) {
+        const propEl = card.querySelector('.node-proposition');
+        if (propEl) propEl.textContent = node.processed.proposition;
+    }
+
+    // Update in modal if open
+    if (windowManager.windows.some(w => w.nodeId === nodeId)) {
+        const windowObj = windowManager.windows.find(w => w.nodeId === nodeId);
+        if (windowObj) {
+            windowManager.loadWindowContent(windowObj);
+        }
+    }
+}
+
+// ===== Node Deletion =====
+let currentDeletingNodeId = null;
+
+async function openDeleteModal(nodeId) {
+    try {
+        const response = await api.getNode(nodeId);
+        const node = response.node;
+        currentDeletingNodeId = nodeId;
+
+        document.getElementById('deleteNodeTitle').textContent = node.processed.proposition;
+        document.getElementById('deleteConfirmModal').style.display = 'flex';
+    } catch (error) {
+        ui.showToast(`加载节点失败: ${error.message}`, 'error');
+    }
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+    currentDeletingNodeId = null;
+}
+
+async function confirmDeleteNode() {
+    if (!currentDeletingNodeId) return;
+
+    try {
+        await api.deleteNode(currentDeletingNodeId);
+        ui.showToast('节点已删除');
+        closeDeleteModal();
+
+        // Remove from display
+        const card = document.querySelector(`[data-node-id="${currentDeletingNodeId}"]`);
+        if (card) card.remove();
+
+        // Close modal if open
+        if (windowManager.windows.some(w => w.nodeId === currentDeletingNodeId)) {
+            const windowObj = windowManager.windows.find(w => w.nodeId === currentDeletingNodeId);
+            if (windowObj) {
+                windowManager.closeWindow(windowObj.id);
+            }
+        }
+    } catch (error) {
+        ui.showToast(`删除失败: ${error.message}`, 'error');
+    }
+}
+
+// ===== Backup Management =====
+const backupManager = {
+    pendingRestoreName: null,
+    pendingDeleteName: null,
+
+    async loadBackups() {
+        try {
+            const response = await api.getBackups();
+            this.renderBackups(response.backups);
+        } catch (error) {
+            console.error('Failed to load backups:', error);
+            document.getElementById('backupList').innerHTML = '<p style="color: var(--color-text-muted);">加载备份列表失败</p>';
+        }
+    },
+
+    renderBackups(backups) {
+        const container = document.getElementById('backupList');
+        if (!backups || backups.length === 0) {
+            container.innerHTML = '<p style="color: var(--color-text-muted);">暂无备份</p>';
+            return;
+        }
+
+        // Store backups data for reference
+        this.backupsData = backups;
+
+        container.innerHTML = backups.map((backup, index) => {
+            return `
+            <div class="backup-item" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px;
+                background: var(--color-bg-tertiary);
+                border-radius: 8px;
+                margin-bottom: 8px;
+            " data-backup-index="${index}">
+                <div class="backup-info">
+                    <div style="font-weight: 500;">${escapeHtml(backup.name)}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+                        ${new Date(backup.created_at).toLocaleString('zh-CN')} · ${backup.node_count} 个节点 · ${backup.size_mb} MB
+                    </div>
+                </div>
+                <div class="backup-actions" style="display: flex; gap: 8px;">
+                    <button class="btn-secondary btn-sm backup-download-btn" data-backup-index="${index}">下载</button>
+                    <button class="btn-secondary btn-sm backup-restore-btn" data-backup-index="${index}">恢复</button>
+                    <button class="btn-danger btn-sm backup-delete-btn" data-backup-index="${index}">删除</button>
+                </div>
+            </div>
+        `}).join('');
+
+        // Attach event listeners after rendering
+        this.attachBackupEventListeners();
+    },
+
+    attachBackupEventListeners() {
+        const container = document.getElementById('backupList');
+
+        // Download buttons
+        container.querySelectorAll('.backup-download-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Use currentTarget to get the button element, not the clicked child
+                const button = e.currentTarget;
+                const index = parseInt(button.dataset.backupIndex);
+                const backup = this.backupsData[index];
+                if (backup) {
+                    console.log('[Backup] Download:', backup.name, 'Index:', index);
+                    this.downloadBackup(backup.name);
+                } else {
+                    console.error('[Backup] Download failed - no backup at index:', index);
+                }
+            });
+        });
+
+        // Restore buttons - open confirm modal
+        container.querySelectorAll('.backup-restore-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.currentTarget;
+                const index = parseInt(button.dataset.backupIndex);
+                const backup = this.backupsData[index];
+                if (backup) {
+                    console.log('[Backup] Restore:', backup.name, 'Index:', index);
+                    this.openRestoreModal(backup.name);
+                } else {
+                    console.error('[Backup] Restore failed - no backup at index:', index);
+                }
+            });
+        });
+
+        // Delete buttons - open confirm modal
+        container.querySelectorAll('.backup-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.currentTarget;
+                const index = parseInt(button.dataset.backupIndex);
+                const backup = this.backupsData[index];
+                if (backup) {
+                    console.log('[Backup] Delete:', backup.name, 'Index:', index);
+                    this.openDeleteModal(backup.name);
+                } else {
+                    console.error('[Backup] Delete failed - no backup at index:', index);
+                }
+            });
+        });
+    },
+
+    openRestoreModal(backupName) {
+        this.pendingRestoreName = backupName;
+        document.getElementById('restoreBackupName').textContent = backupName;
+        document.getElementById('backupRestoreModal').style.display = 'flex';
+    },
+
+    closeRestoreModal() {
+        document.getElementById('backupRestoreModal').style.display = 'none';
+        this.pendingRestoreName = null;
+    },
+
+    async confirmRestoreBackup() {
+        if (!this.pendingRestoreName) return;
+
+        // Save the name before closing modal (which clears it)
+        const backupName = this.pendingRestoreName;
+        console.log('[Backup] Confirm restore:', backupName);
+
+        try {
+            ui.showToast('正在恢复备份...');
+            this.closeRestoreModal();
+            await api.restoreBackup(backupName, true);
+            ui.showToast('备份恢复成功，页面将刷新');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            ui.showToast(`恢复备份失败: ${error.message}`, 'error');
+        }
+    },
+
+    openDeleteModal(backupName) {
+        this.pendingDeleteName = backupName;
+        document.getElementById('deleteBackupName').textContent = backupName;
+        document.getElementById('backupDeleteModal').style.display = 'flex';
+    },
+
+    closeDeleteModal() {
+        document.getElementById('backupDeleteModal').style.display = 'none';
+        this.pendingDeleteName = null;
+    },
+
+    async confirmDeleteBackup() {
+        if (!this.pendingDeleteName) return;
+
+        // Save the name before closing modal (which clears it)
+        const backupName = this.pendingDeleteName;
+        console.log('[Backup] Confirm delete:', backupName);
+
+        try {
+            this.closeDeleteModal();
+            await api.deleteBackup(backupName);
+            ui.showToast('备份已删除');
+            await this.loadBackups();
+        } catch (error) {
+            ui.showToast(`删除备份失败: ${error.message}`, 'error');
+        }
+    },
+
+    async createBackup() {
+        try {
+            const btn = document.getElementById('createBackupBtn');
+            ui.showLoading(btn, '创建中...');
+            const response = await api.createBackup();
+            ui.showToast('备份创建成功');
+            await this.loadBackups();
+        } catch (error) {
+            ui.showToast(`创建备份失败: ${error.message}`, 'error');
+        } finally {
+            const btn = document.getElementById('createBackupBtn');
+            ui.hideLoading(btn);
+        }
+    },
+
+    downloadBackup(backupName) {
+        window.open(`${api.baseURL}/api/v1/backups/${encodeURIComponent(backupName)}/download`);
+    },
+
+    async importBackup(file) {
+        if (!file) {
+            ui.showToast('请选择备份文件', 'error');
+            return;
+        }
+
+        if (!file.name.endsWith('.zip')) {
+            ui.showToast('请选择 .zip 格式的备份文件', 'error');
+            return;
+        }
+
+        try {
+            ui.showToast('正在上传备份文件...');
+            await api.uploadBackup(file);
+            ui.showToast('备份导入成功');
+            await this.loadBackups();
+        } catch (error) {
+            ui.showToast(`导入备份失败: ${error.message}`, 'error');
+        }
+    }
+};
+
+// ===== API Client Extensions =====
+APIClient.prototype.preciseQuery = async function(data) {
+    return this.request('/api/v1/query/precise', {
+        method: 'POST',
+        body: data
+    });
+};
+
+APIClient.prototype.updateNode = async function(id, data) {
+    return this.request(`/api/v1/nodes/${id}`, {
+        method: 'PUT',
+        body: data
+    });
+};
+
+APIClient.prototype.getBackups = async function() {
+    return this.request('/api/v1/backups');
+};
+
+APIClient.prototype.createBackup = async function() {
+    return this.request('/api/v1/backups', { method: 'POST' });
+};
+
+APIClient.prototype.restoreBackup = async function(name, confirm = false) {
+    return this.request(`/api/v1/backups/${encodeURIComponent(name)}/restore`, {
+        method: 'POST',
+        body: { confirm }
+    });
+};
+
+APIClient.prototype.deleteBackup = async function(name) {
+    return this.request(`/api/v1/backups/${encodeURIComponent(name)}`, { method: 'DELETE' });
+};
+
+APIClient.prototype.uploadBackup = async function(file) {
+    const url = `${this.baseURL}/api/v1/backups/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: '上传失败' }));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+};
+
+// ===== Event Listeners for New Features =====
+document.addEventListener('DOMContentLoaded', () => {
+    // Query mode switching
+    initQueryModeSwitching();
+
+    // Edit modal
+    document.getElementById('closeEditModal')?.addEventListener('click', closeEditModal);
+    document.getElementById('cancelEditBtn')?.addEventListener('click', closeEditModal);
+    document.getElementById('saveNodeBtn')?.addEventListener('click', saveNodeEdit);
+
+    // Delete modal
+    document.getElementById('closeDeleteModal')?.addEventListener('click', closeDeleteModal);
+    document.getElementById('cancelDeleteBtn')?.addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', confirmDeleteNode);
+
+    // Backup management
+    document.getElementById('createBackupBtn')?.addEventListener('click', () => backupManager.createBackup());
+    document.getElementById('refreshBackupsBtn')?.addEventListener('click', () => backupManager.loadBackups());
+
+    // Import backup button
+    const importBackupBtn = document.getElementById('importBackupBtn');
+    const importBackupInput = document.getElementById('importBackupInput');
+    if (importBackupBtn && importBackupInput) {
+        importBackupBtn.addEventListener('click', () => {
+            importBackupInput.click();
+        });
+        importBackupInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                backupManager.importBackup(file);
+            }
+            // Reset input to allow selecting the same file again
+            e.target.value = '';
+        });
+    }
+
+    // Backup restore modal
+    document.getElementById('closeRestoreModal')?.addEventListener('click', () => backupManager.closeRestoreModal());
+    document.getElementById('cancelRestoreBtn')?.addEventListener('click', () => backupManager.closeRestoreModal());
+    document.getElementById('confirmRestoreBtn')?.addEventListener('click', () => backupManager.confirmRestoreBackup());
+
+    // Backup delete modal
+    document.getElementById('closeBackupDeleteModal')?.addEventListener('click', () => backupManager.closeDeleteModal());
+    document.getElementById('cancelBackupDeleteBtn')?.addEventListener('click', () => backupManager.closeDeleteModal());
+    document.getElementById('confirmBackupDeleteBtn')?.addEventListener('click', () => backupManager.confirmDeleteBackup());
+
+    // Search button behavior is already bound in initApp
+    // We just need to update the handleSearch function to support query mode switching
+
+    // Close modals on backdrop click
+    document.getElementById('nodeEditModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'nodeEditModal') closeEditModal();
+    });
+    document.getElementById('deleteConfirmModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'deleteConfirmModal') closeDeleteModal();
+    });
+    document.getElementById('backupRestoreModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'backupRestoreModal') backupManager.closeRestoreModal();
+    });
+    document.getElementById('backupDeleteModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'backupDeleteModal') backupManager.closeDeleteModal();
+    });
+});
 
 // ===== Viewport Height Fix for Mobile Browsers =====
 function setViewportHeight() {

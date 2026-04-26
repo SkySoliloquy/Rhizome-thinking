@@ -14,6 +14,7 @@ from rhizome.core.theme_store import ThemeStore
 from rhizome.core.theme_models import Theme, NodeTheme
 from rhizome.retrieval.vector_store import VectorStore, get_vector_store
 from rhizome.api.dependencies import get_node_store
+from rhizome.retrieval.search_optimizer import invalidate_theme_cache
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,16 @@ class CreateNodeRequest(BaseModel):
     """Request to create a new node."""
     raw_input: str = Field(..., min_length=1, description="原始输入内容")
     source_type: str = Field(default="original", description="来源类型")
+    source_title: Optional[str] = Field(default=None, description="来源标题")
+    source_location: Optional[str] = Field(default=None, description="来源位置")
+
+
+class UpdateNodeRequest(BaseModel):
+    """Request to update an existing node."""
+    proposition: Optional[str] = Field(default=None, description="核心命题")
+    raw_input: Optional[str] = Field(default=None, description="原始输入内容")
+    tags: Optional[list[str]] = Field(default=None, description="标签列表")
+    open_questions: Optional[list[str]] = Field(default=None, description="开放问题列表")
     source_title: Optional[str] = Field(default=None, description="来源标题")
     source_location: Optional[str] = Field(default=None, description="来源位置")
 
@@ -157,6 +168,7 @@ async def create_node(
         # Extract themes from the new node (async, non-blocking)
         try:
             await extract_themes_for_node(node)
+            invalidate_theme_cache()
             logger.info(f"Themes extracted for node {node.id[:8]}")
         except Exception as theme_error:
             logger.warning(f"Theme extraction failed for node {node.id[:8]}: {theme_error}")
@@ -226,6 +238,38 @@ async def get_node(
     )
 
 
+@router.put("/nodes/{node_id}")
+async def update_node(
+    node_id: str,
+    request: UpdateNodeRequest,
+    node_store: NodeStore = Depends(get_node_store)
+):
+    """Update a node."""
+    if not node_store.exists(node_id):
+        raise HTTPException(status_code=404, detail="节点未找到")
+
+    updated_node = node_store.update_node(
+        node_id=node_id,
+        proposition=request.proposition,
+        raw_input=request.raw_input,
+        tags=request.tags,
+        open_questions=request.open_questions,
+        source_title=request.source_title,
+        source_location=request.source_location
+    )
+
+    if not updated_node:
+        raise HTTPException(status_code=500, detail="更新节点失败")
+
+    invalidate_theme_cache()
+
+    return {
+        "message": "节点已更新",
+        "node_id": node_id,
+        "node": updated_node
+    }
+
+
 @router.delete("/nodes/{node_id}")
 async def delete_node(
     node_id: str,
@@ -235,13 +279,15 @@ async def delete_node(
     """Delete a node."""
     if not node_store.exists(node_id):
         raise HTTPException(status_code=404, detail="节点未找到")
-    
+
     # Delete from file system
     node_store.delete(node_id)
-    
+
     # Delete from vector store
     vector_store.delete_node(node_id)
-    
+
+    invalidate_theme_cache()
+
     return {"message": "节点已删除", "node_id": node_id}
 
 

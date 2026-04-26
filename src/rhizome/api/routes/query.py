@@ -1,10 +1,15 @@
 """Query API routes for semantic search."""
 
+from datetime import datetime
+from typing import Literal, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from rhizome.retrieval.query_engine import QueryEngine, QueryModifiers, QueryResult
 from rhizome.api.dependencies import get_query_engine
+from rhizome.core.node_store import NodeStore
+from rhizome.api.dependencies import get_node_store
 
 router = APIRouter()
 
@@ -16,6 +21,36 @@ class QueryRequest(BaseModel):
         default_factory=QueryModifiers,
         description="查询修饰符 - 用于过滤结果"
     )
+
+
+class PreciseQueryRequest(BaseModel):
+    """Precise query request (distinct from semantic search)."""
+    search_mode: Literal["semantic", "precise"] = "precise"
+    proposition_query: Optional[str] = Field(default=None, description="命题关键字")
+    raw_content_query: Optional[str] = Field(default=None, description="原始内容关键字")
+    start_date: Optional[datetime] = Field(default=None, description="开始日期")
+    end_date: Optional[datetime] = Field(default=None, description="结束日期")
+    tags: list[str] = Field(default_factory=list, description="标签筛选")
+    sort_by: Literal["time", "proposition"] = "time"
+    limit: int = Field(default=50, ge=1, le=200, description="最大结果数")
+
+
+class PreciseQueryResultItem(BaseModel):
+    """Single precise query result item."""
+    id: str
+    proposition: str
+    raw_input: str
+    tags: list[str]
+    timestamp: str
+    source_title: Optional[str] = None
+    source_location: Optional[str] = None
+
+
+class PreciseQueryResponse(BaseModel):
+    """Precise query response."""
+    results: list[PreciseQueryResultItem]
+    total: int
+    query: dict
 
 
 class QueryResultItem(BaseModel):
@@ -126,19 +161,66 @@ async def cluster_view_query(
         raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
 
 
+@router.post("/query/precise", response_model=PreciseQueryResponse)
+async def precise_query(
+    request: PreciseQueryRequest,
+    node_store: NodeStore = Depends(get_node_store)
+):
+    """Execute precise query with multiple filters.
+
+    Supports combined conditions (AND logic) for exact matching.
+    """
+    try:
+        results = node_store.precise_search(
+            proposition_query=request.proposition_query,
+            raw_content_query=request.raw_content_query,
+            tags=request.tags if request.tags else None,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            sort_by=request.sort_by,
+            limit=request.limit
+        )
+
+        result_items = [
+            PreciseQueryResultItem(
+                id=node.id,
+                proposition=node.processed.proposition,
+                raw_input=node.raw_input[:200] + "..." if len(node.raw_input) > 200 else node.raw_input,
+                tags=node.tags,
+                timestamp=node.timestamp.isoformat(),
+                source_title=node.source.title,
+                source_location=node.source.location
+            )
+            for node in results
+        ]
+
+        return PreciseQueryResponse(
+            results=result_items,
+            total=len(result_items),
+            query={
+                "proposition_query": request.proposition_query,
+                "raw_content_query": request.raw_content_query,
+                "tags": request.tags,
+                "start_date": request.start_date.isoformat() if request.start_date else None,
+                "end_date": request.end_date.isoformat() if request.end_date else None,
+                "sort_by": request.sort_by
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"精准查询失败: {str(e)}")
+
+
 @router.get("/search")
 async def keyword_search(
     q: str,
     limit: int = 10,
+    node_store: NodeStore = Depends(get_node_store),
     query_engine: QueryEngine = Depends(get_query_engine)
 ):
     """Simple keyword search in propositions."""
-    # Use node_store for keyword search
-    from rhizome.core.node_store import NodeStore
-    
-    node_store = NodeStore()
     results = node_store.search_by_proposition(q, limit=limit)
-    
+
     return {
         "results": [
             {

@@ -305,11 +305,8 @@ class MockLLMProcessor(LLMProcessor):
         base_url: Optional[str] = None,
         model: Optional[str] = None
     ) -> None:
-        """Initialize mock processor without API key check."""
-        # Skip parent __init__ to avoid API key validation
-        self.api_key = "mock"
-        self.base_url = "mock"
-        self.model = "mock"
+        """Initialize mock processor with mock API values."""
+        super().__init__(api_key="mock", base_url="mock", model="mock")
 
     async def process(
         self,

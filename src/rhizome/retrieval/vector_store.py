@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 from typing import Optional, Union
 from datetime import datetime, timedelta
 
@@ -12,6 +13,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from rhizome.config import settings
 from rhizome.core.models import Node
+
+logger = logging.getLogger(__name__)
 
 
 class MockEmbeddingGenerator:
@@ -324,13 +327,15 @@ class VectorStore:
                 metadata = results["metadatas"][0][i] if results["metadatas"] else {}
                 formatted_results.append((node_id, similarity_score, metadata))
         
-        # 添加调试日志，帮助理解相似度分布
+        # Log similarity distribution for debugging
         if formatted_results:
             scores = [s for _, s, _ in formatted_results]
-            print(f"[Vector Search Debug] Query: '{query[:50]}...', "
-                  f"Results: {len(formatted_results)}, "
-                  f"Score range: {min(scores):.3f} - {max(scores):.3f}, "
-                  f"Avg: {sum(scores)/len(scores):.3f}")
+            logger.debug(
+                f"[Vector Search] Query: '{query[:50]}...', "
+                f"Results: {len(formatted_results)}, "
+                f"Score range: {min(scores):.3f} - {max(scores):.3f}, "
+                f"Avg: {sum(scores)/len(scores):.3f}"
+            )
         
         return formatted_results
     
@@ -366,8 +371,9 @@ class VectorStore:
                 cutoff = None
             
             if cutoff:
+                # ChromaDB expects Unix timestamp (float), not ISO format string
                 conditions.append({
-                    "timestamp": {"$gte": cutoff.isoformat()}
+                    "timestamp": {"$gte": cutoff.timestamp()}
                 })
         
         if not conditions:

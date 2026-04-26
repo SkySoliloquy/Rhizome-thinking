@@ -3148,3 +3148,223 @@ button, .nav-item, .tag-filter, .icon-btn {
         cursor: default !important;
     }
 }
+
+/* ===== Query Mode Buttons ===== */
+.query-mode-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    background: var(--color-bg-tertiary);
+    padding: 4px;
+    border-radius: var(--radius-md);
+}
+
+.query-mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.query-mode-btn:hover {
+    color: var(--color-text-secondary);
+}
+
+.query-mode-btn.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* ===== Precise Search Results ===== */
+.precise-results .node-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.action-btn.view-btn {
+    background: var(--color-primary);
+    color: white;
+}
+
+.action-btn.edit-btn {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.delete-btn {
+    background: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+/* ===== Modifier Input ===== */
+.modifier-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.modifier-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* ===== Edit Tags ===== */
+.edit-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.edit-tags label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.edit-tags label:hover {
+    background: var(--color-bg-secondary);
+}
+
+.edit-tags input[type="checkbox"] {
+    accent-color: var(--color-primary);
+}
+
+/* ===== Form Actions ===== */
+.form-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    justify-content: flex-end;
+}
+
+/* ===== Button Variants ===== */
+.btn-danger {
+    padding: 10px 20px;
+    background: var(--color-danger);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+}
+
+/* ===== Backup Section ===== */
+.backup-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.backup-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.backup-list {
+    margin-top: var(--spacing-md);
+}
+
+/* ===== Node Edit Modal ===== */
+#nodeEditModal .modal-content {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+#nodeEditModal .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+#nodeEditModal .form-group textarea,
+#nodeEditModal .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    resize: vertical;
+}
+
+#nodeEditModal .form-group textarea:focus,
+#nodeEditModal .form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* ===== Delete Confirm Modal ===== */
+#deleteConfirmModal .modal-content {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== Modal Backdrop ===== */
+#nodeEditModal,
+#deleteConfirmModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}

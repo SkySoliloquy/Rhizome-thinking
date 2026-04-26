@@ -82,6 +82,15 @@ class OptimizedStreamingSearch:
             # Get parameters
             min_similarity = modifiers_data.get("min_similarity", 0.3)
             limit = modifiers_data.get("limit", 20)
+            search_mode = modifiers_data.get("search_mode", "balanced")
+
+            # Adjust min_similarity based on search mode
+            mode_similarity = {
+                "strict": 0.5,
+                "balanced": 0.3,
+                "explore": 0.1
+            }
+            effective_min_similarity = mode_similarity.get(search_mode, min_similarity)
             
             # Stage 2: Check cache and load themes (fast, from cache)
             self.progress.stage = "cache_check"
@@ -149,6 +158,8 @@ class OptimizedStreamingSearch:
             grouped_themes: dict[str, list] = {tag: [] for tag in tag_order}
             
             for theme, similarity in matched_themes:
+                if similarity <= 0.0:
+                    continue
                 if theme.tag in grouped_themes:
                     nodes = []
                     for node_id in theme.node_ids:
@@ -178,9 +189,13 @@ class OptimizedStreamingSearch:
                     for node in theme_data["nodes"]:
                         covered_node_ids.add(node["id"])
             
-            # Add uncovered nodes from vector search (应用相似度阈值)
-            filtered_vector_results = [r for r in vector_results if r.similarity >= min_similarity]
+            # Add uncovered nodes from vector search (使用模式对应的相似度阈值)
+            filtered_vector_results = [r for r in vector_results if r.similarity >= effective_min_similarity]
+            vector_supplement_count = 0
+            mode_limit = {"strict": 5, "balanced": 10, "explore": 20}.get(search_mode, 10)
             for result in filtered_vector_results:
+                if vector_supplement_count >= mode_limit:
+                    break
                 if result.node.id not in covered_node_ids:
                     tag = result.node.tags[0] if result.node.tags else "vague"
                     if tag in grouped_themes:
@@ -201,6 +216,7 @@ class OptimizedStreamingSearch:
                             }],
                             "match_score": result.similarity
                         })
+                        vector_supplement_count += 1
             
             self.progress.detail = f"向量搜索补充了 {len(filtered_vector_results)} 个相关节点"
             yield self._send_progress()

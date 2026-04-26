@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhizome Thinking - 构成主义风格预览</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Noto Sans SC', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+            gap: 40px;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+
+        .style-card {
+            background: #1a1a1a;
+            border-radius: 0;
+            overflow: hidden;
+            border: 4px solid #333;
+        }
+
+        .style-header {
+            padding: 24px;
+            background: #000;
+            border-bottom: 4px solid #333;
+        }
+
+        .style-header h2 {
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 8px;
+        }
+
+        .style-header p {
+            color: #888;
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+
+        .style-preview {
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== 构成主义风格1: 经典红黄蓝 ===== */
+        .constructivism-classic {
+            --constr-red: #e30613;
+            --constr-yellow: #ffed00;
+            --constr-blue: #0075bf;
+            --constr-black: #000000;
+            --constr-white: #ffffff;
+            --constr-gray: #333333;
+        }
+
+        .constructivism-classic .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--constr-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 对角线装饰 */
+        .constructivism-classic .app-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 100px,
+                rgba(227, 6, 19, 0.03) 100px,
+                rgba(227, 6, 19, 0.03) 104px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .constructivism-classic .app-header {
+            height: 80px;
+            background: var(--constr-black);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0 0 40px;
+            position: relative;
+            z-index: 10;
+            clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%);
+        }
+
+        .constructivism-classic .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .constructivism-classic .menu-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--constr-red);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transform: skewX(-10deg);
+        }
+
+        .constructivism-classic .menu-icon span {
+            width: 24px;
+            height: 3px;
+            background: var(--constr-white);
+        }
+
+        .constructivism-classic .app-header h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--constr-white);
+            -webkit-text-fill-color: var(--constr-white);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0;
+            transform: skewX(-5deg);
+        }
+
+        .constructivism-classic .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .constructivism-classic .settings-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--constr-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+            cursor: pointer;
+        }
+
+        .constructivism-classic .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .constructivism-classic .sidebar {
+            width: 300px;
+            background: var(--constr-white);
+            border-right: 4px solid var(--constr-black);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* 侧边栏顶部红色装饰 */
+        .constructivism-classic .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: var(--constr-red);
+        }
+
+        .constructivism-classic .search-box {
+            position: relative;
+        }
+
+        .constructivism-classic .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--constr-white);
+            border: 3px solid var(--constr-black);
+            color: var(--constr-black);
+            font-size: 0.9375rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transform: skewX(-3deg);
+        }
+
+        .constructivism-classic .search-box input::placeholder {
+            color: #999;
+            font-weight: 400;
+        }
+
+        .constructivism-classic .search-btn {
+            position: absolute;
+            right: -3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: calc(100% + 6px);
+            background: var(--constr-blue);
+            border: 3px solid var(--constr-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .constructivism-classic .control-section {
+            position: relative;
+        }
+
+        .constructivism-classic .control-section label {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--constr-black);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            display: block;
+            padding-left: 10px;
+            border-left: 4px solid var(--constr-red);
+        }
+
+        .constructivism-classic .mode-buttons {
+            display: flex;
+            gap: 0;
+            border: 3px solid var(--constr-black);
+        }
+
+        .constructivism-classic .mode-btn {
+            flex: 1;
+            padding: 14px 12px;
+            background: var(--constr-white);
+            border: none;
+            border-right: 3px solid var(--constr-black);
+            color: var(--constr-black);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+        }
+
+        .constructivism-classic .mode-btn:last-child {
+            border-right: none;
+            clip-path: none;
+        }
+
+        .constructivism-classic .mode-btn.active {
+            background: var(--constr-red);
+            color: var(--constr-white);
+        }
+
+        .constructivism-classic .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .constructivism-classic .tag-filter {
+            padding: 10px 16px;
+            background: var(--constr-white);
+            border: 3px solid var(--constr-black);
+            color: var(--constr-black);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+        }
+
+        .constructivism-classic .tag-filter.active {
+            background: var(--constr-yellow);
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0 var(--constr-black);
+        }
+
+        .constructivism-classic .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--constr-white);
+            position: relative;
+        }
+
+        /* 内容区几何装饰 */
+        .constructivism-classic .content-area::before {
+            content: '';
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 100px;
+            height: 100px;
+            background: var(--constr-blue);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            opacity: 0.2;
+        }
+
+        .constructivism-classic .content-area::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            width: 60px;
+            height: 60px;
+            background: var(--constr-red);
+            opacity: 0.15;
+        }
+
+        .constructivism-classic .empty-state {
+            text-align: center;
+            color: var(--constr-black);
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-classic .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--constr-black);
+            stroke-width: 2;
+        }
+
+        .constructivism-classic .empty-state p {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .constructivism-classic .bottom-nav {
+            height: 70px;
+            background: var(--constr-black);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-classic .bottom-nav::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--constr-red) 0px,
+                var(--constr-red) 40px,
+                var(--constr-yellow) 40px,
+                var(--constr-yellow) 80px,
+                var(--constr-blue) 80px,
+                var(--constr-blue) 120px
+            );
+        }
+
+        .constructivism-classic .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--constr-white);
+            font-size: 0.625rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 10px 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .constructivism-classic .nav-item.active {
+            color: var(--constr-yellow);
+        }
+
+        .constructivism-classic .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            width: 30px;
+            height: 4px;
+            background: var(--constr-red);
+            transform: skewX(-20deg);
+        }
+
+        /* ===== 构成主义风格2: 工业机械风 ===== */
+        .constructivism-industrial {
+            --indust-orange: #ff6b35;
+            --indust-black: #1a1a1a;
+            --indust-gray: #4a4a4a;
+            --indust-silver: #c0c0c0;
+            --indust-white: #f5f5f5;
+            --indust-rust: #8b4513;
+        }
+
+        .constructivism-industrial .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--indust-black);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 铆钉装饰 */
+        .constructivism-industrial .app-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20px 20px, var(--indust-gray) 2px, transparent 2px),
+                radial-gradient(circle at 20px 60px, var(--indust-gray) 2px, transparent 2px);
+            background-size: 100px 80px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .constructivism-industrial .app-header {
+            height: 70px;
+            background: linear-gradient(180deg, var(--indust-gray) 0%, var(--indust-black) 100%);
+            border-bottom: 4px solid var(--indust-orange);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-industrial .gear-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--indust-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 
+                0 0 0 4px var(--indust-black),
+                0 0 0 6px var(--indust-orange);
+        }
+
+        .constructivism-industrial .app-header h1 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--indust-orange);
+            -webkit-text-fill-color: var(--indust-orange);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 0;
+            text-shadow: 2px 2px 0 var(--indust-black), 4px 4px 0 rgba(255, 107, 53, 0.3);
+        }
+
+        .constructivism-industrial .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .constructivism-industrial .sidebar {
+            width: 280px;
+            background: var(--indust-gray);
+            border-right: 4px solid var(--indust-orange);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* 侧边栏工业条纹 */
+        .constructivism-industrial .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -14px;
+            width: 10px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                180deg,
+                var(--indust-orange) 0px,
+                var(--indust-orange) 10px,
+                var(--indust-black) 10px,
+                var(--indust-black) 20px
+            );
+        }
+
+        .constructivism-industrial .search-box {
+            position: relative;
+        }
+
+        .constructivism-industrial .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--indust-black);
+            border: 2px solid var(--indust-silver);
+            border-radius: 0;
+            color: var(--indust-white);
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .constructivism-industrial .search-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background: var(--indust-orange);
+            border: 2px solid var(--indust-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+
+        .constructivism-industrial .control-section label {
+            font-size: 0.6875rem;
+            font-weight: 900;
+            color: var(--indust-orange);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            display: block;
+            padding: 8px 12px;
+            background: var(--indust-black);
+            border-left: 4px solid var(--indust-orange);
+        }
+
+        .constructivism-industrial .mode-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .constructivism-industrial .mode-btn {
+            padding: 14px 12px;
+            background: var(--indust-black);
+            border: 2px solid var(--indust-silver);
+            border-radius: 0;
+            color: var(--indust-silver);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .constructivism-industrial .mode-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
+            transition: left 0.3s;
+        }
+
+        .constructivism-industrial .mode-btn:hover::before {
+            left: 100%;
+        }
+
+        .constructivism-industrial .mode-btn.active {
+            background: var(--indust-orange);
+            border-color: var(--indust-orange);
+            color: var(--indust-black);
+        }
+
+        .constructivism-industrial .tag-filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .constructivism-industrial .tag-filter {
+            padding: 12px 10px;
+            background: var(--indust-black);
+            border: 2px solid var(--indust-silver);
+            border-radius: 0;
+            color: var(--indust-silver);
+            font-size: 0.625rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .constructivism-industrial .tag-filter.active {
+            background: var(--indust-orange);
+            border-color: var(--indust-orange);
+            color: var(--indust-black);
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+        }
+
+        .constructivism-industrial .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--indust-black);
+            position: relative;
+        }
+
+        /* 工业警示条纹 */
+        .constructivism-industrial .content-area::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--indust-orange) 0px,
+                var(--indust-orange) 10px,
+                var(--indust-black) 10px,
+                var(--indust-black) 20px
+            );
+            opacity: 0.5;
+        }
+
+        .constructivism-industrial .empty-state {
+            text-align: center;
+            color: var(--indust-silver);
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-industrial .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--indust-orange);
+            stroke-width: 2;
+        }
+
+        .constructivism-industrial .empty-state p {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--indust-orange);
+        }
+
+        .constructivism-industrial .bottom-nav {
+            height: 70px;
+            background: linear-gradient(0deg, var(--indust-gray) 0%, var(--indust-black) 100%);
+            border-top: 4px solid var(--indust-orange);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-industrial .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--indust-silver);
+            font-size: 0.625rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 10px 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .constructivism-industrial .nav-item.active {
+            color: var(--indust-orange);
+        }
+
+        .constructivism-industrial .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            width: 40px;
+            height: 4px;
+            background: var(--indust-orange);
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.8);
+        }
+
+        /* ===== 构成主义风格3: 苏维埃宣传海报风 ===== */
+        .constructivism-propaganda {
+            --prop-red: #cc0000;
+            --prop-gold: #ffd700;
+            --prop-black: #0d0d0d;
+            --prop-cream: #f5f0e8;
+            --prop-dark-red: #8b0000;
+        }
+
+        .constructivism-propaganda .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--prop-cream);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 放射状背景 */
+        .constructivism-propaganda .app-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-conic-gradient(
+                from 0deg at 50% 50%,
+                transparent 0deg,
+                transparent 5deg,
+                rgba(204, 0, 0, 0.02) 5deg,
+                rgba(204, 0, 0, 0.02) 10deg
+            );
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .constructivism-propaganda .app-header {
+            height: 90px;
+            background: var(--prop-red);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            position: relative;
+            z-index: 10;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
+        }
+
+        .constructivism-propaganda .app-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: var(--prop-gold);
+        }
+
+        .constructivism-propaganda .star-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--prop-gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .constructivism-propaganda .app-header h1 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--prop-gold);
+            -webkit-text-fill-color: var(--prop-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin: 0;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+        }
+
+        .constructivism-propaganda .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .constructivism-propaganda .sidebar {
+            width: 300px;
+            background: var(--prop-cream);
+            border-right: 8px solid var(--prop-red);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* 红星装饰 */
+        .constructivism-propaganda .sidebar::before {
+            content: '★';
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            font-size: 40px;
+            color: var(--prop-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            z-index: 20;
+        }
+
+        .constructivism-propaganda .search-box {
+            position: relative;
+        }
+
+        .constructivism-propaganda .search-box input {
+            width: 100%;
+            padding: 18px 55px 18px 20px;
+            background: var(--prop-white);
+            border: 4px solid var(--prop-red);
+            color: var(--prop-black);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .constructivism-propaganda .search-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: calc(100% - 8px);
+            background: var(--prop-red);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .constructivism-propaganda .control-section label {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--prop-red);
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            margin-bottom: 12px;
+            display: block;
+            padding: 10px 15px;
+            background: var(--prop-gold);
+            border: 3px solid var(--prop-red);
+            text-align: center;
+        }
+
+        .constructivism-propaganda .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .constructivism-propaganda .mode-btn {
+            padding: 16px 20px;
+            background: var(--prop-cream);
+            border: 3px solid var(--prop-red);
+            color: var(--prop-red);
+            font-size: 0.875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            position: relative;
+            text-align: center;
+        }
+
+        .constructivism-propaganda .mode-btn::before {
+            content: '▶';
+            position: absolute;
+            left: 15px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .constructivism-propaganda .mode-btn.active::before {
+            opacity: 1;
+        }
+
+        .constructivism-propaganda .mode-btn.active {
+            background: var(--prop-red);
+            color: var(--prop-gold);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4);
+        }
+
+        .constructivism-propaganda .tag-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .constructivism-propaganda .tag-filter {
+            padding: 12px 16px;
+            background: var(--prop-cream);
+            border: 3px solid var(--prop-red);
+            color: var(--prop-red);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .constructivism-propaganda .tag-filter::before {
+            content: '□';
+            position: absolute;
+            left: 12px;
+            font-size: 1rem;
+        }
+
+        .constructivism-propaganda .tag-filter.active::before {
+            content: '★';
+            color: var(--prop-gold);
+        }
+
+        .constructivism-propaganda .tag-filter.active {
+            background: var(--prop-red);
+            color: var(--prop-gold);
+            border-color: var(--prop-dark-red);
+        }
+
+        .constructivism-propaganda .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--prop-cream);
+            position: relative;
+        }
+
+        /* 装饰性锤子镰刀风格图形 */
+        .constructivism-propaganda .content-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: 
+                radial-gradient(circle at 70% 30%, var(--prop-red) 15%, transparent 15%),
+                linear-gradient(45deg, transparent 48%, var(--prop-gold) 48%, var(--prop-gold) 52%, transparent 52%);
+            opacity: 0.08;
+        }
+
+        .constructivism-propaganda .empty-state {
+            text-align: center;
+            color: var(--prop-red);
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-propaganda .empty-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            stroke: var(--prop-red);
+            stroke-width: 3;
+        }
+
+        .constructivism-propaganda .empty-state p {
+            font-size: 1.125rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--prop-red);
+        }
+
+        .constructivism-propaganda .bottom-nav {
+            height: 80px;
+            background: var(--prop-red);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+            clip-path: polygon(0 15%, 5% 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        .constructivism-propaganda .bottom-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--prop-gold);
+        }
+
+        .constructivism-propaganda .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--prop-cream);
+            font-size: 0.6875rem;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 12px 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.2s;
+        }
+
+        .constructivism-propaganda .nav-item.active {
+            color: var(--prop-gold);
+            transform: translateY(-4px);
+        }
+
+        /* ===== 构成主义风格4: 包豪斯几何 ===== */
+        .constructivism-bauhaus {
+            --bauhaus-red: #e94b3c;
+            --bauhaus-yellow: #f2c94c;
+            --bauhaus-blue: #2d9cdb;
+            --bauhaus-black: #1a1a1a;
+            --bauhaus-white: #ffffff;
+            --bauhaus-gray: #f4f4f4;
+        }
+
+        .constructivism-bauhaus .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--bauhaus-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .constructivism-bauhaus .app-header {
+            height: 70px;
+            background: var(--bauhaus-black);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 包豪斯色块装饰 */
+        .constructivism-bauhaus .header-left-block {
+            width: 70px;
+            height: 70px;
+            background: var(--bauhaus-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .constructivism-bauhaus .app-header h1 {
+            flex: 1;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--bauhaus-white);
+            -webkit-text-fill-color: var(--bauhaus-white);
+            letter-spacing: 0.3em;
+            margin: 0;
+        }
+
+        .constructivism-bauhaus .header-right-section {
+            display: flex;
+        }
+
+        .constructivism-bauhaus .header-yellow-block {
+            width: 35px;
+            height: 70px;
+            background: var(--bauhaus-yellow);
+        }
+
+        .constructivism-bauhaus .header-blue-block {
+            width: 35px;
+            height: 70px;
+            background: var(--bauhaus-blue);
+        }
+
+        .constructivism-bauhaus .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .constructivism-bauhaus .sidebar {
+            width: 280px;
+            background: var(--bauhaus-gray);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* 包豪斯几何装饰 */
+        .constructivism-bauhaus .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: var(--bauhaus-yellow);
+            clip-path: circle(100% at 100% 0%);
+        }
+
+        .constructivism-bauhaus .search-box {
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-bauhaus .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--bauhaus-white);
+            border: none;
+            border-bottom: 4px solid var(--bauhaus-black);
+            color: var(--bauhaus-black);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .constructivism-bauhaus .search-box input:focus {
+            outline: none;
+            border-bottom-color: var(--bauhaus-red);
+        }
+
+        .constructivism-bauhaus .search-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background: var(--bauhaus-blue);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .constructivism-bauhaus .control-section {
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-bauhaus .control-section label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--bauhaus-black);
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            margin-bottom: 15px;
+            display: block;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bauhaus-black);
+        }
+
+        .constructivism-bauhaus .mode-buttons {
+            display: flex;
+            gap: 0;
+        }
+
+        .constructivism-bauhaus .mode-btn {
+            flex: 1;
+            padding: 16px 12px;
+            background: var(--bauhaus-white);
+            border: 2px solid var(--bauhaus-black);
+            color: var(--bauhaus-black);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            margin-right: -2px;
+        }
+
+        .constructivism-bauhaus .mode-btn:first-child {
+            border-radius: 20px 0 0 20px;
+        }
+
+        .constructivism-bauhaus .mode-btn:last-child {
+            border-radius: 0 20px 20px 0;
+            margin-right: 0;
+        }
+
+        .constructivism-bauhaus .mode-btn.active {
+            background: var(--bauhaus-red);
+            color: var(--bauhaus-white);
+            border-color: var(--bauhaus-red);
+        }
+
+        .constructivism-bauhaus .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .constructivism-bauhaus .tag-filter {
+            padding: 10px 18px;
+            background: var(--bauhaus-white);
+            border: 2px solid var(--bauhaus-black);
+            color: var(--bauhaus-black);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            border-radius: 15px;
+        }
+
+        .constructivism-bauhaus .tag-filter:nth-child(2) {
+            border-color: var(--bauhaus-red);
+        }
+
+        .constructivism-bauhaus .tag-filter:nth-child(3) {
+            border-color: var(--bauhaus-blue);
+        }
+
+        .constructivism-bauhaus .tag-filter:nth-child(4) {
+            border-color: var(--bauhaus-yellow);
+            background: var(--bauhaus-yellow);
+        }
+
+        .constructivism-bauhaus .tag-filter.active {
+            background: var(--bauhaus-black);
+            color: var(--bauhaus-white);
+            border-color: var(--bauhaus-black);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .constructivism-bauhaus .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bauhaus-white);
+            position: relative;
+        }
+
+        /* 包豪斯几何装饰 */
+        .constructivism-bauhaus .content-area::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 150px;
+            height: 150px;
+            background: var(--bauhaus-red);
+            clip-path: polygon(0 100%, 100% 100%, 0 0);
+            opacity: 0.1;
+        }
+
+        .constructivism-bauhaus .content-area::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 80px;
+            height: 80px;
+            border: 8px solid var(--bauhaus-yellow);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        .constructivism-bauhaus .empty-state {
+            text-align: center;
+            color: var(--bauhaus-black);
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-bauhaus .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--bauhaus-black);
+            stroke-width: 2;
+        }
+
+        .constructivism-bauhaus .empty-state p {
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+        }
+
+        .constructivism-bauhaus .bottom-nav {
+            height: 70px;
+            background: var(--bauhaus-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            padding: 0 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .constructivism-bauhaus .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--bauhaus-white);
+            font-size: 0.625rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 10px 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .constructivism-bauhaus .nav-item.active {
+            opacity: 1;
+            color: var(--bauhaus-yellow);
+        }
+
+        .constructivism-bauhaus .nav-indicator {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--bauhaus-red);
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <h1>CONSTRUCTIVISM // 构成主义风格预览</h1>
+    
+    <div class="preview-container">
+        <!-- 构成主义风格1: 经典红黄蓝 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>★ 经典红黄蓝 (Classic RYB)</h2>
+                <p>El Lissitzky 风格 - 强烈对角线、几何剪切、三原色对比</p>
+            </div>
+            <div class="style-preview constructivism-classic">
+                <div class="app-container">
+                    <header class="app-header">
+                        <div class="header-left">
+                            <div class="menu-icon">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <h1>RHIZOME THINKING</h1>
+                        </div>
+                        <div class="header-right">
+                            <div class="settings-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">🧠 语义</button>
+                                    <button class="mode-btn">🎯 精准</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>搜索模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">精确</button>
+                                    <button class="mode-btn">平衡</button>
+                                    <button class="mode-btn">探索</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确</button>
+                                    <button class="tag-filter">推断</button>
+                                    <button class="tag-filter">模糊</button>
+                                    <button class="tag-filter">待思考</button>
+                                    <button class="tag-filter">跨域</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 构成主义风格2: 工业机械风 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>⚙ 工业机械 (Industrial Machine)</h2>
+                <p>Tatlin 塔特林风格 - 铆钉、金属质感、警示条纹、齿轮元素</p>
+            </div>
+            <div class="style-preview constructivism-industrial">
+                <div class="app-container">
+                    <header class="app-header">
+                        <div class="gear-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </div>
+                        <h1>RHIZOME THINKING</h1>
+                        <div style="width: 44px; height: 44px; background: #ff6b35; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="3">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义检索</button>
+                                    <button class="mode-btn">精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确</button>
+                                    <button class="tag-filter">推断</button>
+                                    <button class="tag-filter">模糊</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 构成主义风格3: 苏维埃宣传海报风 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>☭ 苏维埃宣传 (Soviet Propaganda)</h2>
+                <p>斯大林时期海报风格 - 放射光芒、红星、锤子、强烈政治美学</p>
+            </div>
+            <div class="style-preview constructivism-propaganda">
+                <div class="app-container">
+                    <header class="app-header">
+                        <div class="star-icon"></div>
+                        <h1>RHIZOME KNOWLEDGE</h1>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="width: 12px; height: 50px; background: #ffd700; transform: skewX(-10deg);"></div>
+                            <div style="width: 12px; height: 50px; background: #ffd700; transform: skewX(-10deg);"></div>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5f0e8" stroke-width="3">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义检索</button>
+                                    <button class="mode-btn">精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确结论</button>
+                                    <button class="tag-filter">推断结论</button>
+                                    <button class="tag-filter">模糊感知</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 构成主义风格4: 包豪斯几何 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>◐ 包豪斯几何 (Bauhaus Geometry)</h2>
+                <p>Bauhaus 风格 - 圆形、方形、三角形、圆角矩形、功能主义</p>
+            </div>
+            <div class="style-preview constructivism-bauhaus">
+                <div class="app-container">
+                    <header class="app-header">
+                        <div class="header-left-block">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </div>
+                        <h1>RHIZOME THINKING</h1>
+                        <div class="header-right-section">
+                            <div class="header-yellow-block"></div>
+                            <div class="header-blue-block"></div>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义</button>
+                                    <button class="mode-btn">精准</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确</button>
+                                    <button class="tag-filter">推断</button>
+                                    <button class="tag-filter">模糊</button>
+                                    <button class="tag-filter">待思考</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                        <div class="nav-indicator" style="left: 10%;"></div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

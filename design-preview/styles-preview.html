@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhizome Thinking - 风格预览</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #6366f1, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+            gap: 40px;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+
+        .style-card {
+            background: #1a1a2e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .style-header {
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .style-header h2 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .style-header p {
+            color: #888;
+            font-size: 0.875rem;
+        }
+
+        .style-preview {
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== 风格1: 现代玻璃拟态 ===== */
+        .glass-theme {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: rgba(30, 30, 50, 0.6);
+            --bg-tertiary: rgba(40, 40, 60, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.7);
+            --text-muted: rgba(255,255,255,0.5);
+            --accent: #8b5cf6;
+            --accent-light: #a78bfa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --glass-border: rgba(255,255,255,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .glass-theme .app-container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 50%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-theme .app-header {
+            height: 56px;
+            background: rgba(30, 30, 50, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .glass-theme .app-header h1 {
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .glass-theme .main-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .glass-theme .sidebar {
+            width: 280px;
+            background: rgba(30, 30, 50, 0.5);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .glass-theme .search-box {
+            position: relative;
+        }
+
+        .glass-theme .search-box input {
+            width: 100%;
+            padding: 12px 44px 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9375rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .glass-theme .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .glass-theme .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .glass-theme .control-section label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .glass-theme .mode-buttons {
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .glass-theme .mode-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .glass-theme .mode-btn.active {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .glass-theme .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .glass-theme .tag-filter {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .glass-theme .tag-filter.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #a78bfa;
+        }
+
+        .glass-theme .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-theme .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .glass-theme .empty-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            opacity: 0.3;
+            stroke: currentColor;
+        }
+
+        .glass-theme .bottom-nav {
+            height: 64px;
+            background: rgba(30, 30, 50, 0.7);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .glass-theme .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .glass-theme .nav-item:hover {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .glass-theme .nav-item.active {
+            color: #a78bfa;
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .glass-theme .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* ===== 风格2: 温暖纸质风格 ===== */
+        .paper-theme {
+            --paper-bg: #f5f1e8;
+            --paper-card: #faf8f3;
+            --paper-border: #e8e4d9;
+            --text-primary: #2d2a26;
+            --text-secondary: #6b6560;
+            --text-muted: #9a9590;
+            --accent: #8b4513;
+            --accent-light: #a0522d;
+            --success: #2d5016;
+            --warning: #b8860b;
+            --danger: #8b0000;
+        }
+
+        .paper-theme .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--paper-bg);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Noto Sans SC', serif;
+        }
+
+        .paper-theme .app-header {
+            height: 56px;
+            background: var(--paper-card);
+            border-bottom: 2px solid var(--paper-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .paper-theme .app-header h1 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            -webkit-text-fill-color: var(--accent);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .paper-theme .main-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .paper-theme .sidebar {
+            width: 280px;
+            background: var(--paper-card);
+            border-right: 2px solid var(--paper-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .paper-theme .search-box input {
+            width: 100%;
+            padding: 12px 44px 12px 16px;
+            background: white;
+            border: 2px solid var(--paper-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .paper-theme .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .paper-theme .control-section label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .paper-theme .mode-buttons {
+            display: flex;
+            gap: 8px;
+            background: var(--paper-bg);
+            padding: 4px;
+            border-radius: 8px;
+            border: 2px solid var(--paper-border);
+        }
+
+        .paper-theme .mode-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .paper-theme .mode-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+        }
+
+        .paper-theme .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .paper-theme .tag-filter {
+            padding: 8px 14px;
+            background: white;
+            border: 2px solid var(--paper-border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .paper-theme .tag-filter.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .paper-theme .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--paper-bg);
+        }
+
+        .paper-theme .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .paper-theme .bottom-nav {
+            height: 64px;
+            background: var(--paper-card);
+            border-top: 2px solid var(--paper-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+
+        .paper-theme .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .paper-theme .nav-item.active {
+            color: var(--accent);
+            background: rgba(139, 69, 19, 0.08);
+        }
+
+        /* ===== 风格3: 极简黑白 ===== */
+        .minimal-theme {
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #eeeeee;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --border: #e0e0e0;
+            --accent: #000000;
+        }
+
+        .minimal-theme .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .minimal-theme .app-header {
+            height: 56px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .minimal-theme .app-header h1 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            -webkit-text-fill-color: var(--text-primary);
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .minimal-theme .main-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .minimal-theme .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .minimal-theme .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .minimal-theme .search-box input:focus {
+            outline: none;
+            border-color: var(--text-primary);
+        }
+
+        .minimal-theme .control-section label {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .minimal-theme .mode-buttons {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+        }
+
+        .minimal-theme .mode-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg);
+            border: none;
+            border-right: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .minimal-theme .mode-btn:last-child {
+            border-right: none;
+        }
+
+        .minimal-theme .mode-btn.active {
+            background: var(--text-primary);
+            color: var(--bg);
+        }
+
+        .minimal-theme .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .minimal-theme .tag-filter {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .minimal-theme .tag-filter.active {
+            background: var(--text-primary);
+            border-color: var(--text-primary);
+            color: var(--bg);
+        }
+
+        .minimal-theme .content-area {
+            flex: 1;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .minimal-theme .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .minimal-theme .bottom-nav {
+            height: 56px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .minimal-theme .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: var(--text-muted);
+            font-size: 0.625rem;
+            cursor: pointer;
+            padding: 8px 20px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .minimal-theme .nav-item.active {
+            color: var(--text-primary);
+        }
+
+        /* ===== 风格4: 赛博朋克 ===== */
+        .cyber-theme {
+            --bg: #050508;
+            --bg-secondary: #0a0a12;
+            --bg-tertiary: #11111a;
+            --neon-cyan: #00f5ff;
+            --neon-pink: #ff00ff;
+            --neon-yellow: #ffff00;
+            --neon-green: #00ff41;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+        }
+
+        .cyber-theme .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Courier New', monospace;
+        }
+
+        .cyber-theme .app-header {
+            height: 56px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .cyber-theme .app-header h1 {
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
+            -webkit-text-fill-color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+            margin: 0;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .cyber-theme .main-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .cyber-theme .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .cyber-theme .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 0;
+            color: var(--neon-cyan);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.1);
+        }
+
+        .cyber-theme .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .cyber-theme .control-section label {
+            font-size: 0.6875rem;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 10px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .cyber-theme .mode-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .cyber-theme .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 0;
+            color: var(--neon-cyan);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .cyber-theme .mode-btn.active {
+            background: var(--neon-cyan);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        .cyber-theme .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cyber-theme .tag-filter {
+            padding: 8px 14px;
+            background: var(--bg);
+            border: 1px solid var(--neon-pink);
+            border-radius: 0;
+            color: var(--neon-pink);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .cyber-theme .tag-filter.active {
+            background: var(--neon-pink);
+            color: var(--bg);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+        }
+
+        .cyber-theme .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg) 100%);
+        }
+
+        .cyber-theme .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .cyber-theme .bottom-nav {
+            height: 64px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--neon-cyan);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+        }
+
+        .cyber-theme .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.625rem;
+            cursor: pointer;
+            padding: 8px 16px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .cyber-theme .nav-item.active {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .cyber-theme .nav-item svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rhizome Thinking - 界面风格预览</h1>
+    
+    <div class="preview-container">
+        <!-- 风格1: 现代玻璃拟态 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>🌊 现代玻璃拟态 (Glassmorphism)</h2>
+                <p>半透明毛玻璃效果，紫色渐变强调，科技感与优雅并存</p>
+            </div>
+            <div class="style-preview glass-theme">
+                <div class="app-container">
+                    <header class="app-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(255,255,255,0.7);">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        <h1>Rhizome Thinking</h1>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(255,255,255,0.7);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">🧠 语义检索</button>
+                                    <button class="mode-btn">🎯 精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>搜索模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">🎯 精确</button>
+                                    <button class="mode-btn">⚖️ 平衡</button>
+                                    <button class="mode-btn">🔍 探索</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确结论</button>
+                                    <button class="tag-filter">推断结论</button>
+                                    <button class="tag-filter">模糊感知</button>
+                                    <button class="tag-filter">待思考</button>
+                                    <button class="tag-filter">跨域连接</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                <polyline points="2 17 12 22 22 17"></polyline>
+                                <polyline points="2 12 12 17 22 12"></polyline>
+                            </svg>
+                            <span>认知地图</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            <span>关系图</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格2: 温暖纸质 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>📜 温暖纸质风格 (Warm Paper)</h2>
+                <p>米色纸张质感，适合长时间阅读，护眼舒适</p>
+            </div>
+            <div class="style-preview paper-theme">
+                <div class="app-container">
+                    <header class="app-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-secondary);">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        <h1>Rhizome Thinking</h1>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-secondary);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box" style="position: relative;">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">🧠 语义检索</button>
+                                    <button class="mode-btn">🎯 精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确结论</button>
+                                    <button class="tag-filter">推断结论</button>
+                                    <button class="tag-filter">模糊感知</button>
+                                    <button class="tag-filter">待思考</button>
+                                    <button class="tag-filter">跨域连接</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格3: 极简黑白 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>⚫ 极简黑白 (Minimal B&W)</h2>
+                <p>纯黑白配色，去除一切多余装饰，极致简约</p>
+            </div>
+            <div class="style-preview minimal-theme">
+                <div class="app-container">
+                    <header class="app-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-secondary);">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        <h1>Rhizome Thinking</h1>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-secondary);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义检索</button>
+                                    <button class="mode-btn">精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确结论</button>
+                                    <button class="tag-filter">推断结论</button>
+                                    <button class="tag-filter">模糊感知</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格4: 赛博朋克 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>⚡ 赛博朋克 (Cyberpunk)</h2>
+                <p>霓虹光效，高对比度，科技未来感强烈</p>
+            </div>
+            <div class="style-preview cyber-theme">
+                <div class="app-container">
+                    <header class="app-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--neon-cyan);">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        <h1>RHIZOME_THINKING.exe</h1>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--neon-cyan);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box" style="position: relative;">
+                                    <input type="text" placeholder="> 输入语义锚点...">
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义检索</button>
+                                    <button class="mode-btn">精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确结论</button>
+                                    <button class="tag-filter">推断结论</button>
+                                    <button class="tag-filter">模糊感知</button>
+                                    <button class="tag-filter">待思考</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="1.5">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p style="color: var(--neon-cyan);">> 输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

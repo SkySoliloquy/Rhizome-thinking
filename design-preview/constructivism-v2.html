@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhizome Thinking - 构成主义风格 V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Noto Sans SC', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+            gap: 40px;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+
+        .style-card {
+            background: #1a1a1a;
+            overflow: hidden;
+            border: 3px solid #333;
+        }
+
+        .style-header {
+            padding: 20px;
+            background: #000;
+            border-bottom: 3px solid #333;
+        }
+
+        .style-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .style-header p {
+            color: #888;
+            font-size: 0.875rem;
+        }
+
+        .style-preview {
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== 风格1: 罗德琴科摄影蒙太奇 ===== */
+        .rodchenko {
+            --r-red: #d32f2f;
+            --r-black: #000000;
+            --r-white: #ffffff;
+            --r-gray: #333333;
+        }
+
+        .rodchenko .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--r-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 对角分割背景 */
+        .rodchenko .diagonal-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                var(--r-white) 0%,
+                var(--r-white) 45%,
+                var(--r-red) 45%,
+                var(--r-red) 55%,
+                var(--r-black) 55%,
+                var(--r-black) 100%
+            );
+            z-index: 0;
+        }
+
+        .rodchenko .app-header {
+            height: 100px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .rodchenko .header-red-block {
+            width: 200px;
+            background: var(--r-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
+        }
+
+        .rodchenko .header-red-block svg {
+            transform: rotate(-15deg);
+        }
+
+        .rodchenko .header-title-area {
+            flex: 1;
+            background: var(--r-black);
+            display: flex;
+            align-items: center;
+            padding-left: 40px;
+            clip-path: polygon(5% 0, 100% 0, 100% 100%, 0 100%);
+            margin-left: -30px;
+        }
+
+        .rodchenko .header-title-area h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--r-white);
+            -webkit-text-fill-color: var(--r-white);
+            letter-spacing: 0.15em;
+            margin: 0;
+            text-align: left;
+        }
+
+        .rodchenko .header-black-square {
+            width: 100px;
+            background: var(--r-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 8px solid var(--r-red);
+        }
+
+        .rodchenko .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .rodchenko .sidebar {
+            width: 320px;
+            background: var(--r-white);
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rodchenko .sidebar-header {
+            background: var(--r-red);
+            padding: 20px;
+            clip-path: polygon(0 0, 100% 0, 100% 80%, 90% 100%, 0 100%);
+            margin-bottom: 20px;
+        }
+
+        .rodchenko .sidebar-header h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--r-white);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .rodchenko .sidebar-content {
+            padding: 0 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .rodchenko .search-box {
+            position: relative;
+        }
+
+        .rodchenko .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--r-white);
+            border: 4px solid var(--r-black);
+            color: var(--r-black);
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .rodchenko .search-btn {
+            position: absolute;
+            right: -4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: calc(100% + 8px);
+            background: var(--r-red);
+            border: 4px solid var(--r-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .rodchenko .control-section label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: var(--r-black);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            display: block;
+            padding-bottom: 8px;
+            border-bottom: 3px solid var(--r-red);
+        }
+
+        .rodchenko .mode-buttons {
+            display: flex;
+            gap: 0;
+        }
+
+        .rodchenko .mode-btn {
+            flex: 1;
+            padding: 14px 10px;
+            background: var(--r-white);
+            border: 3px solid var(--r-black);
+            color: var(--r-black);
+            font-size: 0.6875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            margin-right: -3px;
+        }
+
+        .rodchenko .mode-btn:last-child {
+            margin-right: 0;
+        }
+
+        .rodchenko .mode-btn.active {
+            background: var(--r-black);
+            color: var(--r-white);
+        }
+
+        .rodchenko .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .rodchenko .tag-filter {
+            padding: 10px 16px;
+            background: var(--r-white);
+            border: 3px solid var(--r-black);
+            color: var(--r-black);
+            font-size: 0.625rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+
+        .rodchenko .tag-filter.active {
+            background: var(--r-red);
+            color: var(--r-white);
+            border-color: var(--r-red);
+            transform: translate(-3px, -3px);
+            box-shadow: 3px 3px 0 var(--r-black);
+        }
+
+        .rodchenko .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .rodchenko .empty-state {
+            text-align: center;
+            color: var(--r-white);
+            position: relative;
+            z-index: 10;
+        }
+
+        .rodchenko .empty-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            stroke: var(--r-white);
+            stroke-width: 2;
+        }
+
+        .rodchenko .empty-state p {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .rodchenko .bottom-nav {
+            height: 80px;
+            background: var(--r-black);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rodchenko .bottom-nav::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: var(--r-red);
+            clip-path: polygon(0 100%, 5% 0, 10% 100%, 15% 0, 20% 100%, 25% 0, 30% 100%, 35% 0, 40% 100%, 45% 0, 50% 100%, 55% 0, 60% 100%, 65% 0, 70% 100%, 75% 0, 80% 100%, 85% 0, 90% 100%, 95% 0, 100% 100%);
+        }
+
+        .rodchenko .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--r-white);
+            font-size: 0.625rem;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 12px 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.2s;
+            opacity: 0.5;
+        }
+
+        .rodchenko .nav-item.active {
+            opacity: 1;
+            color: var(--r-red);
+        }
+
+        /* ===== 风格2: 马列维奇至上主义 ===== */
+        .malevich {
+            --m-black: #000000;
+            --m-white: #ffffff;
+            --m-red: #e30613;
+            --m-blue: #0055ff;
+            --m-yellow: #ffdd00;
+        }
+
+        .malevich .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--m-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 至上主义几何构图 */
+        .malevich .suprematist-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+
+        .malevich .suprematist-bg::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            background: var(--m-red);
+            transform: rotate(15deg);
+        }
+
+        .malevich .suprematist-bg::after {
+            content: '';
+            position: absolute;
+            bottom: 20%;
+            right: 25%;
+            width: 80px;
+            height: 80px;
+            background: var(--m-blue);
+            border-radius: 50%;
+        }
+
+        .malevich .suprematist-cross {
+            position: absolute;
+            top: 30%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+        }
+
+        .malevich .suprematist-cross::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: var(--m-black);
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        .malevich .suprematist-cross::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: var(--m-black);
+            transform: translateY(-50%) rotate(-45deg);
+        }
+
+        .malevich .app-header {
+            height: 120px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+            border-bottom: 8px solid var(--m-black);
+        }
+
+        .malevich .header-circle {
+            width: 120px;
+            height: 120px;
+            background: var(--m-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: -20px 0 0 -20px;
+            position: relative;
+            z-index: 20;
+        }
+
+        .malevich .header-title-block {
+            flex: 1;
+            background: var(--m-white);
+            display: flex;
+            align-items: center;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .malevich .header-title-block::before {
+            content: '';
+            position: absolute;
+            left: -60px;
+            top: 0;
+            width: 120px;
+            height: 100%;
+            background: var(--m-yellow);
+            clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+        }
+
+        .malevich .header-title-block h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: var(--m-black);
+            -webkit-text-fill-color: var(--m-black);
+            letter-spacing: 0.2em;
+            margin: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .malevich .header-blue-bar {
+            width: 80px;
+            background: var(--m-blue);
+            position: relative;
+        }
+
+        .malevich .header-blue-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--m-yellow);
+            transform: rotate(45deg);
+        }
+
+        .malevich .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .malevich .sidebar {
+            width: 300px;
+            background: var(--m-white);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: relative;
+            z-index: 10;
+            border-right: 8px solid var(--m-black);
+        }
+
+        .malevich .sidebar::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50px;
+            width: 100px;
+            height: 100px;
+            background: var(--m-yellow);
+            z-index: -1;
+        }
+
+        .malevich .search-box {
+            position: relative;
+        }
+
+        .malevich .search-box input {
+            width: 100%;
+            padding: 18px 20px;
+            background: var(--m-white);
+            border: 4px solid var(--m-black);
+            color: var(--m-black);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .malevich .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--m-red);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .malevich .control-section label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.125rem;
+            color: var(--m-black);
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            margin-bottom: 15px;
+            display: block;
+            padding: 10px 15px;
+            background: var(--m-yellow);
+            border: 4px solid var(--m-black);
+        }
+
+        .malevich .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .malevich .mode-btn {
+            padding: 16px 20px;
+            background: var(--m-white);
+            border: 4px solid var(--m-black);
+            color: var(--m-black);
+            font-size: 0.875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .malevich .mode-btn::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--m-black);
+        }
+
+        .malevich .mode-btn.active::before {
+            background: var(--m-red);
+        }
+
+        .malevich .mode-btn.active {
+            background: var(--m-black);
+            color: var(--m-white);
+        }
+
+        .malevich .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .malevich .tag-filter {
+            padding: 12px 18px;
+            background: var(--m-white);
+            border: 4px solid var(--m-black);
+            color: var(--m-black);
+            font-size: 0.75rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+
+        .malevich .tag-filter:nth-child(2) {
+            border-color: var(--m-red);
+            color: var(--m-red);
+        }
+
+        .malevich .tag-filter:nth-child(3) {
+            border-color: var(--m-blue);
+            color: var(--m-blue);
+        }
+
+        .malevich .tag-filter:nth-child(4) {
+            border-color: var(--m-yellow);
+            background: var(--m-yellow);
+        }
+
+        .malevich .tag-filter.active {
+            background: var(--m-black);
+            color: var(--m-white);
+            border-color: var(--m-black);
+            transform: rotate(-2deg);
+        }
+
+        .malevich .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .malevich .empty-state {
+            text-align: center;
+            color: var(--m-black);
+            position: relative;
+            z-index: 10;
+        }
+
+        .malevich .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--m-black);
+            stroke-width: 3;
+        }
+
+        .malevich .empty-state p {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .malevich .bottom-nav {
+            height: 80px;
+            background: var(--m-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .malevich .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--m-white);
+            font-size: 0.625rem;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 15px 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.2s;
+            opacity: 0.4;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .malevich .nav-item:last-child {
+            border-right: none;
+        }
+
+        .malevich .nav-item.active {
+            opacity: 1;
+            background: var(--m-red);
+        }
+
+        /* ===== 风格3: 斯特帕诺娃纺织品 ===== */
+        .stepanova {
+            --s-orange: #ff6600;
+            --s-green: #00aa44;
+            --s-brown: #8b4513;
+            --s-cream: #f5f0e1;
+            --s-black: #1a1a1a;
+        }
+
+        .stepanova .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--s-cream);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 纺织品图案背景 */
+        .stepanova .textile-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(255, 102, 0, 0.05) 40px,
+                    rgba(255, 102, 0, 0.05) 42px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(0, 170, 68, 0.05) 40px,
+                    rgba(0, 170, 68, 0.05) 42px
+                );
+            z-index: 0;
+        }
+
+        .stepanova .app-header {
+            height: 90px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+            background: var(--s-black);
+        }
+
+        .stepanova .header-stripe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--s-orange) 0px,
+                var(--s-orange) 30px,
+                var(--s-green) 30px,
+                var(--s-green) 60px,
+                var(--s-brown) 60px,
+                var(--s-brown) 90px
+            );
+        }
+
+        .stepanova .header-left {
+            display: flex;
+            align-items: center;
+            padding-left: 30px;
+            gap: 20px;
+        }
+
+        .stepanova .zigzag-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--s-orange);
+            clip-path: polygon(0 50%, 25% 0, 50% 50%, 75% 0, 100% 50%, 75% 100%, 50% 50%, 25% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stepanova .app-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--s-cream);
+            -webkit-text-fill-color: var(--s-cream);
+            letter-spacing: 0.2em;
+            margin: 0;
+        }
+
+        .stepanova .header-right-pattern {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 30px;
+            gap: 10px;
+        }
+
+        .stepanova .pattern-block {
+            width: 30px;
+            height: 50px;
+        }
+
+        .stepanova .pattern-block:nth-child(1) { background: var(--s-orange); transform: skewX(-10deg); }
+        .stepanova .pattern-block:nth-child(2) { background: var(--s-green); transform: skewX(-10deg); }
+        .stepanova .pattern-block:nth-child(3) { background: var(--s-brown); transform: skewX(-10deg); }
+
+        .stepanova .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .stepanova .sidebar {
+            width: 300px;
+            background: var(--s-cream);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+            z-index: 10;
+            border-right: 6px solid var(--s-brown);
+        }
+
+        .stepanova .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--s-orange) 0px,
+                var(--s-orange) 20px,
+                var(--s-green) 20px,
+                var(--s-green) 40px
+            );
+        }
+
+        .stepanova .search-box {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .stepanova .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--s-cream);
+            border: 3px solid var(--s-brown);
+            color: var(--s-black);
+            font-size: 0.9375rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .stepanova .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            background: var(--s-orange);
+            border: 3px solid var(--s-brown);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+
+        .stepanova .control-section label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: var(--s-brown);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            display: block;
+            padding: 8px 12px;
+            background: var(--s-orange);
+            color: var(--s-cream);
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 0 100%);
+        }
+
+        .stepanova .mode-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stepanova .mode-btn {
+            padding: 14px 12px;
+            background: var(--s-cream);
+            border: 3px solid var(--s-brown);
+            color: var(--s-black);
+            font-size: 0.75rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .stepanova .mode-btn.active {
+            background: var(--s-green);
+            color: var(--s-cream);
+            border-color: var(--s-green);
+            transform: scale(1.05);
+        }
+
+        .stepanova .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .stepanova .tag-filter {
+            padding: 10px 14px;
+            background: var(--s-cream);
+            border: 3px solid var(--s-brown);
+            color: var(--s-black);
+            font-size: 0.6875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .stepanova .tag-filter:nth-child(2) {
+            border-color: var(--s-orange);
+            background: var(--s-orange);
+            color: var(--s-cream);
+        }
+
+        .stepanova .tag-filter:nth-child(3) {
+            border-color: var(--s-green);
+            background: var(--s-green);
+            color: var(--s-cream);
+        }
+
+        .stepanova .tag-filter.active {
+            background: var(--s-brown);
+            color: var(--s-cream);
+            border-color: var(--s-brown);
+        }
+
+        .stepanova .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .stepanova .empty-state {
+            text-align: center;
+            color: var(--s-brown);
+            position: relative;
+            z-index: 10;
+        }
+
+        .stepanova .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--s-orange);
+            stroke-width: 2;
+        }
+
+        .stepanova .empty-state p {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .stepanova .bottom-nav {
+            height: 70px;
+            background: var(--s-black);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stepanova .bottom-nav::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--s-orange) 0px,
+                var(--s-orange) 25px,
+                var(--s-green) 25px,
+                var(--s-green) 50px,
+                var(--s-brown) 50px,
+                var(--s-brown) 75px
+            );
+        }
+
+        .stepanova .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--s-cream);
+            font-size: 0.625rem;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 10px 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            opacity: 0.5;
+        }
+
+        .stepanova .nav-item.active {
+            opacity: 1;
+            color: var(--s-orange);
+        }
+
+        /* ===== 风格4: 波波娃戏剧舞台 ===== */
+        .popova {
+            --p-red: #cc0000;
+            --p-black: #000000;
+            --p-white: #ffffff;
+            --p-gray: #e0e0e0;
+            --p-dark-gray: #333333;
+        }
+
+        .popova .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--p-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .popova .app-header {
+            height: 80px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .popova .header-black-section {
+            width: 60%;
+            background: var(--p-black);
+            display: flex;
+            align-items: center;
+            padding-left: 40px;
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 0 100%);
+        }
+
+        .popova .header-black-section h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--p-white);
+            -webkit-text-fill-color: var(--p-white);
+            letter-spacing: 0.2em;
+            margin: 0;
+            text-align: left;
+        }
+
+        .popova .header-red-section {
+            flex: 1;
+            background: var(--p-red);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 40px;
+            margin-left: -30px;
+            clip-path: polygon(5% 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        .popova .stage-curtain {
+            width: 40px;
+            height: 40px;
+            background: var(--p-white);
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+        }
+
+        .popova .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        .popova .sidebar {
+            width: 280px;
+            background: var(--p-gray);
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        .popova .sidebar-curtain-top {
+            height: 60px;
+            background: var(--p-red);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 90% 100%, 80% 70%, 70% 100%, 60% 70%, 50% 100%, 40% 70%, 30% 100%, 20% 70%, 10% 100%, 0 70%);
+            margin-bottom: 20px;
+        }
+
+        .popova .sidebar-content {
+            padding: 0 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .popova .search-box {
+            position: relative;
+        }
+
+        .popova .search-box input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: var(--p-white);
+            border: 3px solid var(--p-black);
+            color: var(--p-black);
+            font-size: 0.9375rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .popova .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--p-red);
+            border: 3px solid var(--p-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .popova .control-section label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.125rem;
+            color: var(--p-white);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            display: block;
+            padding: 10px 15px;
+            background: var(--p-black);
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 0 100%);
+        }
+
+        .popova .mode-buttons {
+            display: flex;
+            gap: 0;
+        }
+
+        .popova .mode-btn {
+            flex: 1;
+            padding: 14px 10px;
+            background: var(--p-white);
+            border: 3px solid var(--p-black);
+            color: var(--p-black);
+            font-size: 0.6875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            margin-right: -3px;
+        }
+
+        .popova .mode-btn:last-child {
+            margin-right: 0;
+        }
+
+        .popova .mode-btn.active {
+            background: var(--p-red);
+            color: var(--p-white);
+            border-color: var(--p-red);
+        }
+
+        .popova .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .popova .tag-filter {
+            padding: 10px 16px;
+            background: var(--p-white);
+            border: 3px solid var(--p-black);
+            color: var(--p-black);
+            font-size: 0.6875rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .popova .tag-filter.active {
+            background: var(--p-black);
+            color: var(--p-white);
+            transform: translateY(-3px);
+            box-shadow: 0 3px 0 var(--p-red);
+        }
+
+        .popova .content-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: var(--p-white);
+        }
+
+        .popova .content-area::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 3px solid var(--p-black);
+            pointer-events: none;
+        }
+
+        .popova .content-area::after {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            border: 1px solid var(--p-red);
+            pointer-events: none;
+        }
+
+        .popova .empty-state {
+            text-align: center;
+            color: var(--p-black);
+            position: relative;
+            z-index: 10;
+        }
+
+        .popova .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            stroke: var(--p-red);
+            stroke-width: 2;
+        }
+
+        .popova .empty-state p {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .popova .bottom-nav {
+            height: 70px;
+            background: var(--p-black);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .popova .bottom-nav::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: var(--p-red);
+            clip-path: polygon(
+                0 100%, 5% 0, 10% 100%, 15% 0, 20% 100%,
+                25% 0, 30% 100%, 35% 0, 40% 100%, 45% 0,
+                50% 100%, 55% 0, 60% 100%, 65% 0, 70% 100%,
+                75% 0, 80% 100%, 85% 0, 90% 100%, 95% 0, 100% 100%
+            );
+        }
+
+        .popova .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--p-white);
+            font-size: 0.625rem;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 10px 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            opacity: 0.5;
+        }
+
+        .popova .nav-item.active {
+            opacity: 1;
+            color: var(--p-red);
+        }
+    </style>
+</head>
+<body>
+    <h1>CONSTRUCTIVISM V2 // 构成主义风格预览</h1>
+    
+    <div class="preview-container">
+        <!-- 风格1: 罗德琴科摄影蒙太奇 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>◢ 罗德琴科摄影蒙太奇 (Rodchenko Photomontage)</h2>
+                <p>亚历山大·罗德琴科风格 - 对角线分割、照片拼贴、强烈对比</p>
+            </div>
+            <div class="style-preview rodchenko">
+                <div class="app-container">
+                    <div class="diagonal-bg"></div>
+                    <header class="app-header">
+                        <div class="header-red-block">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </div>
+                        <div class="header-title-area">
+                            <h1>RHIZOME THINKING</h1>
+                        </div>
+                        <div class="header-black-square">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="sidebar-header">
+                                <h3>控制面板</h3>
+                            </div>
+                            <div class="sidebar-content">
+                                <div class="control-section">
+                                    <div class="search-box">
+                                        <input type="text" placeholder="输入语义锚点...">
+                                        <button class="search-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <path d="m21 21-4.35-4.35"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="control-section">
+                                    <label>查询模式</label>
+                                    <div class="mode-buttons">
+                                        <button class="mode-btn active">语义</button>
+                                        <button class="mode-btn">精准</button>
+                                    </div>
+                                </div>
+
+                                <div class="control-section">
+                                    <label>分类筛选</label>
+                                    <div class="tag-filters">
+                                        <button class="tag-filter active">全部</button>
+                                        <button class="tag-filter">明确</button>
+                                        <button class="tag-filter">推断</button>
+                                        <button class="tag-filter">模糊</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格2: 马列维奇至上主义 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>◯ 马列维奇至上主义 (Malevich Suprematism)</h2>
+                <p>卡济米尔·马列维奇风格 - 漂浮几何、纯粹形式、空间张力</p>
+            </div>
+            <div class="style-preview malevich">
+                <div class="app-container">
+                    <div class="suprematist-bg">
+                        <div class="suprematist-cross"></div>
+                    </div>
+                    <header class="app-header">
+                        <div class="header-circle">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </div>
+                        <div class="header-title-block">
+                            <h1>RHIZOME THINKING</h1>
+                        </div>
+                        <div class="header-blue-bar">
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义检索</button>
+                                    <button class="mode-btn">精准查询</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确</button>
+                                    <button class="tag-filter">推断</button>
+                                    <button class="tag-filter">模糊</button>
+                                    <button class="tag-filter">待思考</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格3: 斯特帕诺娃纺织品 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>▲ 斯特帕诺娃纺织品 (Stepanova Textile)</h2>
+                <p>瓦尔瓦拉·斯特帕诺娃风格 - 锯齿图案、编织纹理、几何重复</p>
+            </div>
+            <div class="style-preview stepanova">
+                <div class="app-container">
+                    <div class="textile-pattern"></div>
+                    <header class="app-header">
+                        <div class="header-stripe"></div>
+                        <div class="header-left">
+                            <div class="zigzag-icon"></div>
+                            <h1>RHIZOME THINKING</h1>
+                        </div>
+                        <div class="header-right-pattern">
+                            <div class="pattern-block"></div>
+                            <div class="pattern-block"></div>
+                            <div class="pattern-block"></div>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="control-section">
+                                <div class="search-box">
+                                    <input type="text" placeholder="输入语义锚点...">
+                                    <button class="search-btn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="3">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="control-section">
+                                <label>查询模式</label>
+                                <div class="mode-buttons">
+                                    <button class="mode-btn active">语义</button>
+                                    <button class="mode-btn">精准</button>
+                                </div>
+                            </div>
+
+                            <div class="control-section">
+                                <label>分类筛选</label>
+                                <div class="tag-filters">
+                                    <button class="tag-filter active">全部</button>
+                                    <button class="tag-filter">明确</button>
+                                    <button class="tag-filter">推断</button>
+                                    <button class="tag-filter">模糊</button>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风格4: 波波娃戏剧舞台 -->
+        <div class="style-card">
+            <div class="style-header">
+                <h2>◆ 波波娃戏剧舞台 (Popova Stage Design)</h2>
+                <p>柳博芙·波波娃风格 - 舞台幕布、框架构图、戏剧性层次</p>
+            </div>
+            <div class="style-preview popova">
+                <div class="app-container">
+                    <header class="app-header">
+                        <div class="header-black-section">
+                            <h1>RHIZOME THINKING</h1>
+                        </div>
+                        <div class="header-red-section">
+                            <div class="stage-curtain"></div>
+                            <div class="stage-curtain"></div>
+                        </div>
+                    </header>
+                    <div class="main-content">
+                        <aside class="sidebar">
+                            <div class="sidebar-curtain-top"></div>
+                            <div class="sidebar-content">
+                                <div class="control-section">
+                                    <div class="search-box">
+                                        <input type="text" placeholder="输入语义锚点...">
+                                        <button class="search-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <path d="m21 21-4.35-4.35"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="control-section">
+                                    <label>查询模式</label>
+                                    <div class="mode-buttons">
+                                        <button class="mode-btn active">语义</button>
+                                        <button class="mode-btn">精准</button>
+                                    </div>
+                                </div>
+
+                                <div class="control-section">
+                                    <label>分类筛选</label>
+                                    <div class="tag-filters">
+                                        <button class="tag-filter active">全部</button>
+                                        <button class="tag-filter">明确</button>
+                                        <button class="tag-filter">推断</button>
+                                        <button class="tag-filter">模糊</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                        <main class="content-area">
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <p>输入查询内容，发现知识连接</p>
+                            </div>
+                        </main>
+                    </div>
+                    <nav class="bottom-nav">
+                        <div class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>查询</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>添加</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            <span>大纲</span>
+                        </div>
+                        <div class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>统计</span>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -21,8 +21,6 @@ class LLMSearchReranker:
         self.api_key = api_key or settings.minimax_api_key
         self.base_url = base_url or settings.minimax_base_url
         
-        print(f"[LLM Reranker] Initializing with base_url: {self.base_url}")
-        print(f"[LLM Reranker] API key exists: {bool(self.api_key)}")
         logger.info(f"[LLM Reranker] Initializing with base_url: {self.base_url}")
         logger.info(f"[LLM Reranker] API key exists: {bool(self.api_key)}")
 
@@ -119,9 +117,11 @@ class LLMSearchReranker:
 
         filters = filters or {}
         prompt = self._build_prompt(query, themes, filters)
-        
+
         logger.info(f"[LLM Reranker] Reranking {len(themes)} themes for query: '{query}'")
         logger.info(f"[LLM Reranker] Using model: {settings.minimax_model}")
+        logger.info(f"[LLM Reranker] Filters received: time_range={filters.get('time_range')}, tags={filters.get('tags')}, search_mode={filters.get('search_mode')}")
+        logger.info(f"[LLM Reranker] Prompt preview:\n{prompt[:500]}...")
 
         payload = {
             "model": settings.minimax_model,
@@ -173,7 +173,8 @@ class LLMSearchReranker:
     def _parse_ranking(self, content: str, themes: list[Theme]) -> list[tuple[Theme, float]]:
         """Parse LLM response to get ranked themes."""
         theme_by_index = {i + 1: theme for i, theme in enumerate(themes)}
-        default_result = [(theme, 0.5) for theme in themes]
+
+        logger.info(f"[LLM Reranker] Parsing response content: {content[:500]}...")
 
         try:
             json_match = re.search(r'\{[^}]*"ranking"[^}]*\}', content, re.DOTALL)
@@ -183,6 +184,7 @@ class LLMSearchReranker:
             if json_match:
                 result = json.loads(json_match.group(0))
                 ranking = result.get("ranking", [])
+                logger.info(f"[LLM Reranker] Parsed ranking: {ranking}")
 
                 ranked_themes = []
                 seen_indices = set()
@@ -199,17 +201,14 @@ class LLMSearchReranker:
                     except (ValueError, TypeError):
                         continue
 
-                # 添加未排名的主题（分数为0，表示完全不相关）
-                for idx, theme in theme_by_index.items():
-                    if idx not in seen_indices:
-                        ranked_themes.append((theme, 0.0))
+                return ranked_themes if ranked_themes else []
 
-                return ranked_themes if ranked_themes else default_result
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.warning(f"[LLM Reranker] Failed to parse LLM response: {e}")
+            raise
 
-        except (json.JSONDecodeError, KeyError, ValueError):
-            pass
-
-        return default_result
+        logger.warning("[LLM Reranker] No JSON found in LLM response")
+        raise ValueError("No JSON found in LLM response")
 
 
 class MockLLMSearchReranker:
