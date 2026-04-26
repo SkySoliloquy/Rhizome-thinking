@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="theme-color" content="#d32f2f">
     <meta name="description" content="Rhizome Thinking - 个人知识库">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,18 +22,12 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Splash Screen for PWA -->
     <div id="splash-screen">
-        <svg class="splash-logo" viewBox="0 0 24 24" fill="none" stroke="url(#splash-gradient)" stroke-width="1.5">
-            <defs>
-                <linearGradient id="splash-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#a29bfe"/>
-                    <stop offset="100%" style="stop-color:#00cec9"/>
-                </linearGradient>
-            </defs>
+        <svg class="splash-logo" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             <path d="M2 12h20"></path>
@@ -44,26 +38,32 @@
     <div id="app">
         <!-- Header -->
         <header class="app-header">
-            <button id="menuToggle" class="icon-btn" aria-label="菜单">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="header-red-block" id="menuToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
-            </button>
-            <h1>Rhizome Thinking</h1>
-            <button id="settingsBtn" class="icon-btn" aria-label="设置">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            </div>
+            <div class="header-title-area">
+                <h1>Rhizome Thinking</h1>
+            </div>
+            <div class="header-black-square" id="settingsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
-            </button>
+            </div>
         </header>
 
         <!-- Main Content -->
         <main class="main-wrapper">
             <!-- Control Panel (Left Sidebar) -->
             <aside id="controlPanel" class="control-panel">
+                <div class="sidebar-header">
+                    <h3>控制面板</h3>
+                </div>
+                <div class="sidebar-content">
                 <div class="control-section">
                     <div class="search-box">
                         <input
@@ -73,7 +73,7 @@
                             autocomplete="off"
                         >
                         <button id="searchBtn" class="search-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
@@ -238,6 +238,7 @@
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                         </svg>
                     </button>
+                </div>
                 </div>
             </aside>
 
