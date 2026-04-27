@@ -42,7 +42,7 @@ RUN useradd -m -u 1000 appuser
 WORKDIR /app
 
 RUN pip install --no-cache-dir hatchling
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 COPY src/ src/
 RUN pip install --no-cache-dir ".[stage2]"
 
