@@ -1,7 +1,7 @@
 /* ===== Rodchenko Constructivism Style ===== */
 /* Alexander Rodchenko - Photomontage & Graphic Design */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
 
 :root {
     /* Rodchenko Palette - Muted Constructivist Colors */
@@ -19,7 +19,7 @@
     --sidebar-width: 320px;
 
     /* Typography */
-    --font-display: 'Bebas Neue', 'Noto Sans SC', sans-serif;
+    --font-display: 'Oswald', 'Noto Sans SC', sans-serif;
     --font-body: 'Noto Sans SC', -apple-system, sans-serif;
 
     /* Spacing */
@@ -124,10 +124,10 @@ body {
 
 .header-title-area h1 {
     font-family: var(--font-display);
-    font-size: 2.2rem;
-    font-weight: 400;
+    font-size: 1.8rem;
+    font-weight: 600;
     color: var(--r-white);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     margin: 0;
 }
@@ -191,9 +191,10 @@ body {
 
 .sidebar-header h3 {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--r-white);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
@@ -215,7 +216,7 @@ body {
     font-size: 1rem;
     color: var(--r-black);
     text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.1em;
     margin-bottom: 12px;
     display: block;
     padding-bottom: 8px;
@@ -234,9 +235,8 @@ body {
     border: 4px solid var(--r-black);
     color: var(--r-black);
     font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     font-family: var(--font-body);
     transition: all 0.2s;
 }
@@ -286,9 +286,8 @@ body {
     font-size: 0.875rem;
     font-family: var(--font-body);
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-weight: 500;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -319,10 +318,9 @@ body {
     border-right: 3px solid var(--r-black);
     color: var(--r-black);
     font-size: 0.75rem;
-    font-weight: 900;
+    font-weight: 600;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
     font-family: var(--font-body);
 }
@@ -367,10 +365,9 @@ body {
     border-right: 3px solid var(--r-black);
     color: var(--r-black);
     font-size: 0.6875rem;
-    font-weight: 900;
+    font-weight: 600;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
     font-family: var(--font-body);
 }
@@ -408,11 +405,10 @@ body {
     background: var(--r-white);
     border: 3px solid var(--r-black);
     color: var(--r-black);
-    font-size: 0.6875rem;
-    font-weight: 900;
+    font-size: 0.75rem;
+    font-weight: 500;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
     font-family: var(--font-body);
 }
@@ -503,9 +499,9 @@ body {
 
 .empty-state p {
     font-family: var(--font-display);
-    font-size: 1.5rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
     color: var(--r-black);
 }
 
@@ -533,9 +529,10 @@ body {
     align-items: center;
     gap: var(--spacing-md);
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--r-white);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
@@ -581,11 +578,10 @@ body {
 .theme-summary {
     flex: 1;
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--r-black);
     line-height: 1.4;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
 }
 
 .theme-meta {
@@ -601,7 +597,7 @@ body {
     background: var(--r-gray-bg);
     padding: 4px 8px;
     border: 2px solid var(--r-black);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .theme-toggle-btn {
@@ -659,8 +655,8 @@ body {
 }
 
 .node-similarity {
-    font-size: 0.6875rem;
-    font-weight: 900;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--r-red);
     background: var(--r-white);
     padding: 2px 6px;
@@ -673,10 +669,9 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     color: var(--r-gray-light);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .node-tags {
@@ -690,12 +685,11 @@ body {
     padding: 2px 6px;
     background: var(--r-white);
     border: 2px solid var(--r-black);
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     white-space: nowrap;
     text-align: center;
     min-width: 50px;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .node-tag.tag-placeholder {
@@ -711,9 +705,8 @@ body {
     align-items: center;
     padding: 4px 10px;
     font-size: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     border: 2px solid var(--r-black);
 }
 
@@ -756,9 +749,9 @@ body {
 .form-container h2 {
     margin-bottom: var(--spacing-lg);
     font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 400;
-    letter-spacing: 0.15em;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--r-black);
 }
@@ -782,11 +775,10 @@ body {
     display: block;
     margin-bottom: var(--spacing-sm);
     font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 400;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--r-black);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     padding-bottom: 8px;
     border-bottom: 3px solid var(--r-red);
 }
@@ -831,11 +823,10 @@ body {
     border: 4px solid var(--r-black);
     color: var(--r-white);
     font-size: 1rem;
-    font-weight: 900;
+    font-weight: 600;
     font-family: var(--font-body);
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
 }
 
@@ -858,11 +849,10 @@ body {
     border: 3px solid var(--r-black);
     color: var(--r-black);
     font-size: 0.875rem;
-    font-weight: 900;
+    font-weight: 600;
     font-family: var(--font-body);
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
 }
 
@@ -883,9 +873,8 @@ body {
     border: 3px solid var(--r-black);
     cursor: pointer;
     font-size: 0.875rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
     font-family: var(--font-body);
 }
@@ -904,9 +893,8 @@ body {
     cursor: pointer;
     padding: 0;
     text-decoration: underline;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
+    letter-spacing: 0.03em;
+    font-weight: 600;
     font-family: var(--font-body);
 }
 
@@ -957,9 +945,10 @@ body {
 
 .source-manager-header h3 {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--r-white);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
@@ -991,9 +980,8 @@ body {
 }
 
 .source-name {
-    font-weight: 900;
+    font-weight: 600;
     color: var(--r-black);
-    text-transform: uppercase;
 }
 
 .source-desc {
@@ -1002,14 +990,13 @@ body {
 }
 
 .source-badge {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     padding: 2px 6px;
     background: var(--r-gray-bg);
     border: 2px solid var(--r-black);
     color: var(--r-gray);
     margin-right: var(--spacing-sm);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 600;
 }
 
 .source-actions {
@@ -1025,8 +1012,7 @@ body {
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 600;
     font-family: var(--font-body);
 }
 
@@ -1049,9 +1035,10 @@ body {
 .add-source-form h4 {
     margin-bottom: var(--spacing-md);
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--r-black);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
@@ -1165,12 +1152,12 @@ body {
 
 .queue-status .checkmark {
     color: var(--r-black);
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .queue-status .cross {
     color: var(--r-red);
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .queue-status .clock {
@@ -1212,7 +1199,7 @@ body {
     color: var(--r-gray-light);
     min-width: 45px;
     text-align: right;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .queue-remove {
@@ -1227,7 +1214,7 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .queue-remove:hover {
@@ -1244,8 +1231,7 @@ body {
     margin-bottom: var(--spacing-sm);
     font-size: 0.875rem;
     color: var(--r-black);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .batch-progress-bar {
@@ -1265,8 +1251,9 @@ body {
 .stats-container h2 {
     margin-bottom: var(--spacing-lg);
     font-family: var(--font-display);
-    font-size: 2rem;
-    letter-spacing: 0.15em;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--r-black);
 }
@@ -1293,8 +1280,8 @@ body {
 
 .stat-value {
     font-family: var(--font-display);
-    font-size: 3rem;
-    font-weight: 400;
+    font-size: 2.5rem;
+    font-weight: 600;
     color: var(--r-red);
     margin-bottom: var(--spacing-xs);
     line-height: 1;
@@ -1303,16 +1290,16 @@ body {
 .stat-label {
     font-size: 0.875rem;
     color: var(--r-black);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .tag-distribution h3 {
     margin-bottom: var(--spacing-md);
     font-family: var(--font-display);
-    font-size: 1.25rem;
-    letter-spacing: 0.15em;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--r-black);
     padding-bottom: 8px;
@@ -1329,8 +1316,7 @@ body {
     width: 100px;
     font-size: 0.875rem;
     color: var(--r-black);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .tag-bar-track {
@@ -1353,7 +1339,7 @@ body {
     font-size: 0.875rem;
     color: var(--r-black);
     text-align: right;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 /* ===== Bottom Navigation ===== */
@@ -1414,9 +1400,8 @@ body {
 
 .nav-item span {
     font-size: 0.625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .nav-item:hover {
@@ -1465,9 +1450,8 @@ body {
 
 .mobile-bottom-nav .nav-item span {
     font-size: 0.6rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .mobile-bottom-nav .nav-item.active {
@@ -1572,7 +1556,7 @@ body {
     justify-content: center;
     transition: all 0.2s;
     font-size: 0.875rem;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .window-control-btn:hover {
@@ -1589,10 +1573,9 @@ body {
     background: var(--r-red);
     color: var(--r-white);
     font-size: 0.75rem;
-    font-weight: 900;
+    font-weight: 600;
     margin-left: var(--spacing-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
 }
 
 .origin-indicator::before {
@@ -1612,7 +1595,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    font-weight: 900;
+    font-weight: 600;
     z-index: 10;
     border: 3px solid var(--r-black);
 }
@@ -1636,9 +1619,10 @@ body {
 
 .modal-header h3 {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--r-white);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
@@ -1655,7 +1639,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 900;
+    font-weight: 600;
     transition: all 0.2s;
 }
 
@@ -1700,16 +1684,15 @@ body {
     flex-wrap: wrap;
     gap: var(--spacing-xs);
     align-items: center;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .link-item .link-relation {
     background: var(--r-white);
     padding: 2px 6px;
     border: 2px solid var(--r-black);
-    font-size: 0.625rem;
-    font-weight: 900;
+    font-size: 0.6875rem;
+    font-weight: 600;
 }
 
 .link-item .link-reason {
@@ -1732,9 +1715,10 @@ body {
 
 .node-detail-section h4 {
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--r-black);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-bottom: var(--spacing-sm);
     padding-bottom: 8px;
@@ -1763,8 +1747,7 @@ body {
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 600;
     font-family: var(--font-body);
 }
 
@@ -1798,8 +1781,7 @@ body {
     text-align: center;
     display: inline-block;
     min-width: 60px;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .node-detail-tag.tag-placeholder {
@@ -1826,9 +1808,8 @@ body {
     margin-bottom: var(--spacing-sm);
     animation: slideDown 0.3s ease;
     pointer-events: auto;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .toast.success {
@@ -1905,10 +1886,10 @@ body {
 
 .splash-text {
     font-family: var(--font-display);
-    font-size: 2rem;
+    font-size: 1.6rem;
+    font-weight: 600;
     color: var(--r-black);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 /* ===== Search Progress ===== */
@@ -1932,15 +1913,14 @@ body {
 
 .progress-stage {
     font-size: 0.875rem;
-    font-weight: 900;
+    font-weight: 600;
     color: var(--r-black);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.02em;
 }
 
 .progress-percent {
     font-size: 0.875rem;
-    font-weight: 900;
+    font-weight: 600;
     color: var(--r-red);
 }
 
@@ -1965,8 +1945,7 @@ body {
     text-align: center;
     min-height: 1.2rem;
     margin-bottom: var(--spacing-sm);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 400;
 }
 
 .progress-steps {
@@ -1997,8 +1976,7 @@ body {
     color: var(--r-gray-light);
     white-space: nowrap;
     transition: all 0.3s ease;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .step-line {
@@ -2046,10 +2024,11 @@ body {
 
 .view-header h2 {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--r-white);
     margin: 0;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
@@ -2069,8 +2048,7 @@ body {
     font-size: 0.875rem;
     color: var(--r-black);
     flex-wrap: wrap;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .outline-stats-bar strong {
@@ -2094,7 +2072,8 @@ body {
 
 .outline-month-header {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--r-red);
     padding: var(--spacing-sm) 0;
     border-bottom: 4px solid var(--r-black);
@@ -2102,14 +2081,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 .outline-month-count {
     font-size: 0.75rem;
     color: var(--r-gray-light);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .outline-node {
@@ -2161,8 +2140,7 @@ body {
     gap: var(--spacing-sm);
     font-size: 0.75rem;
     color: var(--r-gray-light);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 /* ===== Epistemic Map ===== */
@@ -2182,8 +2160,7 @@ body {
     padding: var(--spacing-sm) 0;
     font-size: 0.75rem;
     color: var(--r-gray-light);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
     writing-mode: vertical-rl;
     text-orientation: mixed;
 }
@@ -2221,8 +2198,7 @@ body {
 .graph-legend .legend-title {
     font-size: 0.75rem;
     color: var(--r-gray-light);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .graph-legend .legend-item {
@@ -2231,8 +2207,7 @@ body {
     gap: 4px;
     font-size: 0.75rem;
     color: var(--r-white);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .graph-legend .legend-item .line {
@@ -2247,10 +2222,11 @@ body {
 
 .backup-section h3 {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--r-black);
     margin-bottom: var(--spacing-md);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     padding-bottom: 8px;
     border-bottom: 3px solid var(--r-red);
@@ -2285,8 +2261,7 @@ body {
     font-size: 0.875rem;
     color: var(--r-black);
     transition: all 0.2s;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .edit-tags label:hover {
@@ -2322,8 +2297,7 @@ body {
     cursor: pointer;
     font-size: 0.75rem;
     transition: all 0.2s;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 500;
     font-family: var(--font-body);
 }
 
@@ -2446,7 +2420,7 @@ body {
     align-items: center;
     justify-content: center;
     color: var(--r-white);
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .mobile-popup .close-popup-btn:active {
@@ -2565,29 +2539,27 @@ body {
     }
 
     .source-node-link {
-        padding: 8px 14px;
-        font-size: 0.875rem;
-        min-height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid var(--r-black);
-        background: var(--r-white);
-        color: var(--r-black);
-        font-weight: 700;
-        text-transform: uppercase;
-    }
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--r-black);
+    background: var(--r-white);
+    color: var(--r-black);
+    font-weight: 500;
+}
 
     .source-nodes-toggle {
-        padding: 8px 14px;
-        font-size: 0.875rem;
-        min-height: 36px;
-        border: 3px solid var(--r-black);
-        background: var(--r-white);
-        color: var(--r-black);
-        font-weight: 700;
-        text-transform: uppercase;
-    }
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    min-height: 36px;
+    border: 3px solid var(--r-black);
+    background: var(--r-white);
+    color: var(--r-black);
+    font-weight: 500;
+}
 
     .modal-body {
         max-height: calc(100vh - 120px);
@@ -2701,9 +2673,8 @@ body {
 .results-count {
     font-size: 0.875rem;
     color: var(--r-white);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
 }
 
 .collapse-btn {
@@ -2714,8 +2685,7 @@ body {
     color: var(--r-black);
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 600;
 }
 
 .collapse-btn:hover {
@@ -2744,9 +2714,8 @@ body {
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     font-family: var(--font-body);
 }
 
@@ -2767,8 +2736,7 @@ body {
     border: 2px solid var(--r-red);
     color: var(--r-red);
     font-size: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 600;
 }
 
 /* ===== Source Nodes ===== */
@@ -2783,8 +2751,7 @@ body {
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 600;
 }
 
 .source-nodes-toggle:hover {
@@ -2829,8 +2796,7 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     flex-shrink: 0;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-weight: 600;
     min-width: 60px;
     text-align: center;
 }
@@ -2911,8 +2877,7 @@ body {
     gap: 4px;
     font-size: 0.75rem;
     color: var(--r-white);
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .legend-item .dot {
@@ -2937,8 +2902,7 @@ body {
     color: var(--r-black);
     max-width: 250px;
     z-index: 1000;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
 /* ===== Focus States ===== */
@@ -3058,7 +3022,7 @@ textarea:focus-visible,
 
     .tag-filter {
         padding: 8px 12px;
-        font-size: 0.625rem;
+        font-size: 0.6875rem;
     }
 }
 
