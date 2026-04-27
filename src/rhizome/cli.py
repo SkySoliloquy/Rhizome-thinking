@@ -731,6 +731,233 @@ def query(
 
 
 @cli.group()
+def server() -> None:
+    """服务器管理命令"""
+    pass
+
+
+@server.command("start")
+@click.pass_context
+def server_start(ctx: click.Context) -> None:
+    """启动服务"""
+    import subprocess
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    try:
+        subprocess.run(
+            ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "up", "-d"],
+            check=True,
+            capture_output=True
+        )
+        console.print("[green]服务已启动[/green]")
+    except subprocess.CalledProcessError as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]启动失败: {e}[/red]")
+        sys.exit(1)
+
+
+@server.command("stop")
+@click.pass_context
+def server_stop(ctx: click.Context) -> None:
+    """停止服务"""
+    import subprocess
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    try:
+        subprocess.run(
+            ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "down"],
+            check=True,
+            capture_output=True
+        )
+        console.print("[green]服务已停止[/green]")
+    except subprocess.CalledProcessError as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]停止失败: {e}[/red]")
+        sys.exit(1)
+
+
+@server.command("restart")
+@click.pass_context
+def server_restart(ctx: click.Context) -> None:
+    """重启服务"""
+    import subprocess
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    try:
+        subprocess.run(
+            ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "restart"],
+            check=True,
+            capture_output=True
+        )
+        console.print("[green]服务已重启[/green]")
+    except subprocess.CalledProcessError as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]重启失败: {e}[/red]")
+        sys.exit(1)
+
+
+@server.command("status")
+@click.pass_context
+def server_status(ctx: click.Context) -> None:
+    """查看服务状态"""
+    import subprocess
+    import urllib.request
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    
+    try:
+        # 检查容器状态
+        result = subprocess.run(
+            ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "ps", "--format", "json"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0 or not result.stdout.strip():
+            console.print("[yellow]服务未运行[/yellow]")
+            return
+        
+        # 健康检查
+        try:
+            with urllib.request.urlopen("http://localhost:8000/health", timeout=5) as response:
+                health_data = response.read().decode()
+                console.print(f"[green]服务运行中[/green]")
+                console.print(f"健康检查: {health_data}")
+        except Exception:
+            console.print("[yellow]服务启动中或异常[/yellow]")
+            
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]检查状态失败: {e}[/red]")
+
+
+@server.command("logs")
+@click.option("-f", "--follow", is_flag=True, help="持续跟踪输出")
+@click.option("-n", "--lines", default=100, help="显示最近N行")
+@click.pass_context
+def server_logs(ctx: click.Context, follow: bool, lines: int) -> None:
+    """查看服务日志"""
+    import subprocess
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    
+    cmd = ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "logs", "--tail", str(lines)]
+    if follow:
+        cmd.append("-f")
+    
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]查看日志失败: {e}[/red]")
+        sys.exit(1)
+
+
+@server.command("info")
+def server_info() -> None:
+    """显示服务访问信息"""
+    import subprocess
+    import re
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    
+    # 获取本机IP
+    try:
+        result = subprocess.run(
+            ["ip", "route", "get", "1"],
+            capture_output=True,
+            text=True
+        )
+        ip_match = re.search(r'src\s+(\d+\.\d+\.\d+\.\d+)', result.stdout)
+        server_ip = ip_match.group(1) if ip_match else "localhost"
+    except Exception:
+        server_ip = "localhost"
+    
+    # 从 docker-compose.yml 读取端口
+    port = "8000"
+    try:
+        with open(f"{project_dir}/docker-compose.yml", "r") as f:
+            content = f.read()
+            port_match = re.search(r'"\$\{PORT:-(\d+)\}:8000"', content)
+            if port_match:
+                port = port_match.group(1)
+    except Exception:
+        pass
+    
+    console.print(f"访问地址: http://{server_ip}:{port}")
+    console.print(f"API文档:  http://{server_ip}:{port}/docs")
+
+
+@server.command("config")
+def server_config() -> None:
+    """显示服务配置"""
+    import subprocess
+    import re
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    
+    # 读取 .env 文件
+    env_file = Path(project_dir) / ".env"
+    if env_file.exists():
+        console.print("[bold]配置项:[/bold]")
+        with open(env_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        # 隐藏 API Key
+                        if "API_KEY" in key and value:
+                            if len(value) > 8:
+                                hidden_value = value[:4] + "****" + value[-4:]
+                            else:
+                                hidden_value = "****"
+                            console.print(f"  {key}={hidden_value}")
+                        else:
+                            console.print(f"  {line}")
+    else:
+        console.print("[yellow].env 文件不存在[/yellow]")
+    
+    # 显示容器镜像版本
+    console.print("\n[bold]容器镜像:[/bold]")
+    try:
+        subprocess.run(
+            ["docker", "compose", "-f", f"{project_dir}/docker-compose.yml", "images"],
+            check=False
+        )
+    except Exception as e:
+        console.print(f"[dim]无法获取镜像信息: {e}[/dim]")
+
+
+@cli.command()
+def install() -> None:
+    """安装 Systemd 服务"""
+    import subprocess
+    project_dir = os.environ.get("RHIZOME_PROJECT_DIR", "/opt/rhizome-thinking")
+    try:
+        subprocess.run(
+            ["bash", f"{project_dir}/scripts/install-service.sh"],
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]安装失败: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+def uninstall() -> None:
+    """卸载 Systemd 服务"""
+    import subprocess
+    try:
+        subprocess.run(["sudo", "systemctl", "stop", "rhizome"], check=False)
+        subprocess.run(["sudo", "systemctl", "disable", "rhizome"], check=False)
+        subprocess.run(["sudo", "rm", "-f", "/etc/systemd/system/rhizome.service"], check=False)
+        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=False)
+        console.print("[green]Systemd 服务已卸载[/green]")
+    except Exception as e:
+        console.print(f"[red]卸载失败: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.group()
 def backup() -> None:
     """备份管理命令"""
     pass

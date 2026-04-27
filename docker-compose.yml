@@ -1,0 +1,23 @@
+services:
+  rhizome:
+    build: .
+    container_name: rhizome-thinking
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./.env:/app/.env:ro
+    environment:
+      - STORAGE_DIR=/app/storage
+      - CHROMA_PERSIST_DIR=/app/storage/chroma
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
