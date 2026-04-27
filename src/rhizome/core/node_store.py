@@ -2,7 +2,6 @@
 
 import json
 import os
-import re
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path

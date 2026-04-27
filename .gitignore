@@ -53,8 +53,14 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Trae specific
-.trae/rules/project_rules.md
+# Backup files
+storage/backups/
+
+# Design prototypes
+design-preview/
+
+# Trae AI-generated documents
+.trae/
 
 # Temporary files
 *.tmp
