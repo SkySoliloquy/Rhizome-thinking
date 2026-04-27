@@ -21,6 +21,8 @@ class BackupManager:
         self.storage_dir = storage_dir or settings.storage_dir
         self.nodes_dir = self.storage_dir / "nodes"
         self.metadata_dir = self.storage_dir / "metadata"
+        self.themes_dir = self.storage_dir / "themes"
+        self.node_themes_dir = self.metadata_dir / "node_themes"
         self.backups_dir = self.storage_dir / "backups"
 
         # Ensure backups directory exists
@@ -78,11 +80,23 @@ class BackupManager:
                     arcname = f"nodes/{node_file.name}"
                     zf.write(node_file, arcname)
 
-            # Add metadata files
+            # Add metadata files (root level only)
             if self.metadata_dir.exists():
                 for meta_file in self.metadata_dir.glob("*.json"):
                     arcname = f"metadata/{meta_file.name}"
                     zf.write(meta_file, arcname)
+
+            # Add node_themes files
+            if self.node_themes_dir.exists():
+                for nt_file in self.node_themes_dir.glob("*.json"):
+                    arcname = f"metadata/node_themes/{nt_file.name}"
+                    zf.write(nt_file, arcname)
+
+            # Add theme files
+            if self.themes_dir.exists():
+                for theme_file in self.themes_dir.glob("*.json"):
+                    arcname = f"themes/{theme_file.name}"
+                    zf.write(theme_file, arcname)
 
         return backup_path
 
@@ -110,17 +124,15 @@ class BackupManager:
 
         # Extract backup
         with zipfile.ZipFile(backup_file, 'r') as zf:
-            # Extract nodes
             for item in zf.namelist():
-                if item.startswith("nodes/") or item.startswith("metadata/"):
-                    # Extract to storage directory (removes the prefix)
-                    parts = item.split("/")
-                    if len(parts) == 2 and parts[1]:
-                        target_dir = self.storage_dir / parts[0]
-                        target_dir.mkdir(parents=True, exist_ok=True)
-                        target_path = target_dir / parts[1]
-                        with zf.open(item) as src, open(target_path, 'wb') as dst:
-                            dst.write(src.read())
+                if item == "backup_manifest.json":
+                    continue
+                parts = item.split("/")
+                if len(parts) >= 2 and parts[-1]:
+                    target_path = self.storage_dir / item
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(item) as src, open(target_path, 'wb') as dst:
+                        dst.write(src.read())
 
         return {
             "success": True,
@@ -168,15 +180,25 @@ class BackupManager:
             raise ValueError("无效的备份文件格式")
 
     def _clear_existing_data(self) -> None:
-        """Clear all existing node and metadata files."""
+        """Clear all existing node, theme, and metadata files."""
         # Clear nodes
         if self.nodes_dir.exists():
             for f in self.nodes_dir.glob("*.md"):
                 f.unlink()
 
-        # Clear metadata
+        # Clear metadata (root level JSON files)
         if self.metadata_dir.exists():
             for f in self.metadata_dir.glob("*.json"):
+                f.unlink()
+
+        # Clear node_themes
+        if self.node_themes_dir.exists():
+            for f in self.node_themes_dir.glob("*.json"):
+                f.unlink()
+
+        # Clear themes
+        if self.themes_dir.exists():
+            for f in self.themes_dir.glob("*.json"):
                 f.unlink()
 
     def list_backups(self) -> list[dict]:
