@@ -1,6 +1,6 @@
 # Rhizome Thinking
 
-个人知识库系统。输入笔记内容，自动完成标签分类、语义链接、主题提取，支持全文搜索和语义检索。
+个人知识库系统。输入笔记内容，自动完成标签分类、语义链接、主题提取，支持全文搜索、语义检索，以及 AI 精炼内容生成。
 
 ## 前置条件
 
@@ -48,14 +48,71 @@ docker compose ps         # 查看状态
 ## 命令行管理
 
 ```bash
+# 节点操作
 rhz add "笔记内容"           # 添加节点
-rhz list                    # 列出所有节点
-rhz show <node-id>          # 查看节点详情
+rhz add -f note.txt          # 从文件添加
+rhz list                     # 列出所有节点
+rhz list -t needs_thinking   # 按标签筛选
+rhz show <node-id>           # 查看节点详情
+rhz stats                    # 知识库统计
+
+# 搜索
 rhz query "搜索内容"         # 语义搜索
-rhz stats                   # 知识库统计
-rhz backup create           # 创建备份
-rhz server info             # 查看服务访问地址
+rhz search "关键词"          # 全文搜索
+rhz find --proposition "..." --tag needs_thinking  # 组合筛选
+
+# 关系管理（新版独立关系系统）
+rhz relationship add <source_id> <target_id> -t supports -s strong
+rhz relationship list
+rhz relationship show <id>
+rhz relationship delete <id>
+rhz relationship validate
+rhz relationship stats
+
+# 备份
+rhz backup create            # 创建备份
+rhz backup list              # 列出备份
+rhz backup restore <name>    # 恢复备份
+rhz backup delete <name>     # 删除备份
+
+# 服务信息
+rhz server info              # 查看服务访问地址
 ```
+
+## 核心功能
+
+### 1. 语义搜索
+
+支持三种搜索模式：
+- **严格模式**: 2-5 个最精确的结果
+- **平衡模式**: 5-10 个结果（默认）
+- **探索模式**: 8-15 个结果，包含弱关联
+
+### 2. AI 精炼内容
+
+每个节点可由 AI 生成精炼内容，保留核心观点并优化表达：
+- 单节点重新生成
+- **批量精炼**: 在精准查询结果中多选节点，一键并行生成
+- 精炼内容支持收起/展开，便于快速浏览
+
+### 3. 主题系统
+
+- 自动提取跨节点主题
+- 主题版本追踪与演进检测
+- 主题冲突识别与建议
+
+### 4. 关系网络
+
+- 新版独立关系系统（Relationship）
+- 关系类型：支持、矛盾、延伸、引用、类比
+- 关系强度：强 / 中 / 弱
+- AI 自动建议关系
+
+### 5. 备份与兼容
+
+- 完整 ZIP 备份（节点 + 元数据 + 主题 + 关系）
+- 向后兼容：旧版本备份可正常导入
+- 导入后可使用批量精炼功能生成精炼内容
 
 ## 环境变量
 
@@ -82,3 +139,12 @@ rhz server info             # 查看服务访问地址
   ./storage/ → /app/storage/   (数据持久化)
   ./.env     → /app/.env       (配置只读)
 ```
+
+## 技术栈
+
+- **后端**: Python 3.12, FastAPI, Pydantic
+- **向量检索**: ChromaDB + SiliconFlow Embedding
+- **LLM**: MiniMax API (MiniMax-M2.7)
+- **前端**: Vanilla JavaScript PWA
+- **存储**: Markdown 文件 + JSON 索引
+- **部署**: Docker Compose
