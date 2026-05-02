@@ -10,6 +10,7 @@ if sys.platform == 'win32':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 import asyncio
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -24,6 +25,12 @@ from rhizome.config import settings
 from rhizome.core.llm_processor import LLMProcessor, MockLLMProcessor
 from rhizome.core.models import Node, Source
 from rhizome.core.node_store import NodeStore
+from rhizome.core.relationship_manager import RelationshipManager, MockRelationshipManager
+from rhizome.core.relationship_store import RelationshipStore
+from rhizome.core.relationship_models import SuggestionStatus
+from rhizome.core.theme_evolution import ThemeEvolutionAnalyzer, MockThemeEvolutionAnalyzer
+from rhizome.core.evolution_store import EvolutionStore
+from rhizome.core.theme_store import ThemeStore
 
 console = Console(force_terminal=True)
 
@@ -203,26 +210,27 @@ def add(
     processed = None
     tags = []
     potential_links = []
+    refined_content = ""
     node = None
     existing_nodes = []
-    
+
     # 显示处理中消息
     with console.status("[bold green]正在使用LLM处理...") as status:
         try:
             # 初始化组件
             store = get_store()
             processor = get_processor(use_mock=mock)
-            
+
             # 获取现有节点用于链接建议
             existing_nodes = store.list_all(limit=20)
-            
+
             # 创建来源
             source = Source(
                 type=source_type,  # type: ignore
                 title=title,
                 location=location
             )
-            
+
             # 使用LLM处理
             async def process():
                 return await processor.process(
@@ -230,15 +238,18 @@ def add(
                     source=source,
                     existing_nodes=existing_nodes
                 )
-            
-            processed, tags, potential_links = asyncio.run(process())
+
+            processed, tags, potential_links, refined_content = asyncio.run(process())
             
             # 创建节点
             node = Node(
                 source=source,
                 raw_input=raw_input,
                 processed=processed,
-                tags=tags  # type: ignore
+                tags=tags,  # type: ignore
+                refined_content=refined_content if refined_content else None,
+                refined_content_version=1 if refined_content else 0,
+                last_refined_at=datetime.now() if refined_content else None
             )
             
             # 保存节点
@@ -1069,6 +1080,540 @@ def backup_delete(ctx: click.Context, backup_name: str) -> None:
         if ctx.obj.get("debug"):
             raise
         console.print(f"[red]✗[/red] 删除备份失败: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def relationships() -> None:
+    """关系管理命令"""
+    pass
+
+
+@relationships.command("suggest")
+@click.option("--recent", default=10, help="分析最近的N个节点")
+@click.option("--max-candidates", default=20, help="每个节点分析的最大候选数")
+@click.option("--mock", is_flag=True, help="使用模拟模式（不调用API）")
+@click.pass_context
+def relationships_suggest(
+    ctx: click.Context,
+    recent: int,
+    max_candidates: int,
+    mock: bool
+) -> None:
+    """手动触发关系分析，为最近节点生成关系建议"""
+    try:
+        store = get_store()
+        rel_store = RelationshipStore()
+
+        # 获取最近的节点
+        all_nodes = store.list_all(limit=recent * 2)
+        all_nodes.sort(key=lambda n: n.timestamp, reverse=True)
+        recent_nodes = all_nodes[:recent]
+
+        if not recent_nodes:
+            console.print("[yellow]知识库中没有节点[/yellow]")
+            return
+
+        # 获取所有主题
+        theme_store = ThemeStore()
+        all_themes = theme_store.list_all_themes()
+
+        # 初始化管理器
+        if mock:
+            manager = MockRelationshipManager(store=rel_store)
+        else:
+            manager = RelationshipManager(store=rel_store)
+
+        console.print(f"[dim]开始分析 {len(recent_nodes)} 个最近节点...[/dim]")
+        console.print()
+
+        total_suggestions = 0
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("分析节点关系...", total=len(recent_nodes))
+
+            for node in recent_nodes:
+                progress.update(task, description=f"分析节点: {node.processed.proposition[:30]}...")
+
+                # 获取其他节点作为候选
+                other_nodes = [n for n in all_nodes if n.id != node.id]
+
+                async def analyze():
+                    return await manager.analyze_new_node(
+                        node=node,
+                        all_nodes=other_nodes,
+                        all_themes=all_themes,
+                        max_candidates=max_candidates
+                    )
+
+                suggestions = asyncio.run(analyze())
+                total_suggestions += len(suggestions)
+                progress.advance(task)
+
+        console.print()
+        console.print(f"[green]✓[/green] 分析完成！共生成 {total_suggestions} 个关系建议")
+
+        # 显示统计
+        stats = rel_store.get_stats()
+        console.print(f"[dim]待处理建议: {stats.pending_count} | 已确认: {stats.confirmed_count} | 已拒绝: {stats.rejected_count}[/dim]")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 关系分析失败: {e}")
+        sys.exit(1)
+
+
+@relationships.command("review")
+@click.option("--limit", default=20, help="最多显示的建议数")
+@click.option("--auto-confirm", is_flag=True, help="自动确认所有建议（无需交互）")
+@click.pass_context
+def relationships_review(
+    ctx: click.Context,
+    limit: int,
+    auto_confirm: bool
+) -> None:
+    """查看并处理待处理的关系建议"""
+    try:
+        rel_store = RelationshipStore()
+        store = get_store()
+
+        # 获取待处理建议
+        pending = rel_store.get_pending_suggestions(limit=limit)
+
+        if not pending:
+            console.print("[green]✓[/green] 没有待处理的关系建议")
+            return
+
+        console.print(f"[bold cyan]🔗 待处理关系建议 ({len(pending)} 个)[/bold cyan]")
+        console.print()
+
+        confirmed_count = 0
+        rejected_count = 0
+
+        for i, suggestion in enumerate(pending, 1):
+            relation_cn = RELATION_TYPE_CN.get(suggestion.relation_type, suggestion.relation_type)
+
+            # 显示建议信息
+            console.print(Panel(
+                f"[bold]{i}. {relation_cn}[/bold] (置信度: {suggestion.confidence:.0%}, 强度: {suggestion.strength:.2f})\n"
+                f"[dim]来源:[/dim] {suggestion.source_proposition[:60]}...\n"
+                f"[dim]目标:[/dim] {suggestion.target_proposition[:60]}...\n"
+                f"[dim]理由:[/dim] {suggestion.reason}",
+                border_style="blue"
+            ))
+
+            if auto_confirm:
+                # 自动确认
+                rel_store.update_suggestion_status(suggestion.id, SuggestionStatus.CONFIRMED)
+                confirmed_count += 1
+                console.print("  [green]✓[/green] 已自动确认")
+            else:
+                # 交互式确认
+                console.print("[dim]输入 'y' 确认, 'n' 拒绝, 's' 跳过, 'a' 确认全部, 'q' 退出[/dim]")
+                console.print("[bold yellow]选择:[/bold yellow] ", end="")
+
+                try:
+                    choice = input().strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    console.print("\n[yellow]已取消[/yellow]")
+                    break
+
+                if choice == 'y':
+                    rel_store.update_suggestion_status(suggestion.id, SuggestionStatus.CONFIRMED)
+                    confirmed_count += 1
+                    console.print("  [green]✓[/green] 已确认")
+                elif choice == 'n':
+                    rel_store.update_suggestion_status(suggestion.id, SuggestionStatus.REJECTED)
+                    rejected_count += 1
+                    console.print("  [red]✗[/red] 已拒绝")
+                elif choice == 'a':
+                    # 确认当前及剩余所有
+                    rel_store.update_suggestion_status(suggestion.id, SuggestionStatus.CONFIRMED)
+                    confirmed_count += 1
+                    # 确认剩余
+                    for remaining in pending[i:]:
+                        rel_store.update_suggestion_status(remaining.id, SuggestionStatus.CONFIRMED)
+                        confirmed_count += 1
+                    console.print(f"  [green]✓[/green] 已确认全部 {len(pending) - i + 1} 个建议")
+                    break
+                elif choice == 'q':
+                    console.print("[yellow]已退出[/yellow]")
+                    break
+                else:
+                    console.print("  [dim]已跳过[/dim]")
+
+            console.print()
+
+        console.print(f"[green]✓[/green] 处理完成: {confirmed_count} 个确认, {rejected_count} 个拒绝")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 查看建议失败: {e}")
+        sys.exit(1)
+
+
+@relationships.command("stats")
+@click.pass_context
+def relationships_stats(ctx: click.Context) -> None:
+    """显示关系统计信息"""
+    try:
+        rel_store = RelationshipStore()
+        stats = rel_store.get_stats()
+
+        console.print(Panel(
+            f"[bold]建议总数:[/bold] {stats.total_suggestions}\n"
+            f"[bold]待处理:[/bold] {stats.pending_count}\n"
+            f"[bold]已确认:[/bold] {stats.confirmed_count}\n"
+            f"[bold]已拒绝:[/bold] {stats.rejected_count}\n"
+            f"[bold]平均置信度:[/bold] {stats.average_confidence:.2f}\n"
+            f"[bold]平均强度:[/bold] {stats.average_strength:.2f}",
+            title="📊 关系统计",
+            border_style="blue"
+        ))
+
+        # 按关系类型分布
+        if stats.by_relation_type:
+            console.print()
+            console.print("[bold]关系类型分布:[/bold]")
+            for rel_type, count in sorted(stats.by_relation_type.items(), key=lambda x: x[1], reverse=True):
+                relation_cn = RELATION_TYPE_CN.get(rel_type, rel_type)
+                bar = "█" * min(count, 20)
+                console.print(f"  {relation_cn:10s} {bar} {count}")
+
+        # 按目标类型分布
+        if stats.by_target_type:
+            console.print()
+            console.print("[bold]目标类型分布:[/bold]")
+            for target_type, count in stats.by_target_type.items():
+                bar = "█" * min(count, 20)
+                console.print(f"  {target_type:10s} {bar} {count}")
+
+        if stats.last_analysis_at:
+            console.print()
+            console.print(f"[dim]最后分析时间: {stats.last_analysis_at}[/dim]")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 获取统计失败: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def themes() -> None:
+    """主题管理命令"""
+    pass
+
+
+@themes.command("check-evolution")
+@click.option("--mock", is_flag=True, help="使用模拟模式（不调用API）")
+@click.pass_context
+def themes_check_evolution(ctx: click.Context, mock: bool) -> None:
+    """检查主题演进机会"""
+    try:
+        store = get_store()
+        theme_store = ThemeStore()
+        evolution_store = EvolutionStore()
+
+        # 获取所有主题
+        all_themes = theme_store.list_all_themes()
+
+        if not all_themes:
+            console.print("[yellow]知识库中没有主题[/yellow]")
+            return
+
+        # 初始化分析器
+        if mock:
+            analyzer = MockThemeEvolutionAnalyzer(theme_store=theme_store)
+        else:
+            analyzer = ThemeEvolutionAnalyzer(theme_store=theme_store)
+
+        console.print(f"[dim]正在分析 {len(all_themes)} 个主题...[/dim]")
+        console.print()
+
+        total_suggestions = 0
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("检查主题演进...", total=len(all_themes))
+
+            for theme in all_themes:
+                progress.update(task, description=f"分析主题: {theme.summary[:30]}...")
+
+                # 获取主题相关节点
+                related_nodes = []
+                for node_id in theme.node_ids[:10]:  # 限制节点数
+                    node = store.get(node_id)
+                    if node:
+                        related_nodes.append(node)
+
+                async def analyze():
+                    return await analyzer.generate_evolution_suggestions(theme, related_nodes)
+
+                suggestions = asyncio.run(analyze())
+
+                # 保存建议
+                for suggestion in suggestions:
+                    evolution_store.save_suggestion(suggestion)
+                    total_suggestions += 1
+
+                progress.advance(task)
+
+        console.print()
+        console.print(f"[green]✓[/green] 检查完成！共发现 {total_suggestions} 个演进建议")
+
+        # 显示统计
+        stats = evolution_store.get_stats()
+        console.print(f"[dim]待处理: {stats['status_distribution'].get('pending', 0)} | "
+                     f"已应用: {stats['status_distribution'].get('applied', 0)} | "
+                     f"涉及主题: {stats['themes_with_suggestions']}[/dim]")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 检查演进失败: {e}")
+        sys.exit(1)
+
+
+@themes.command("evolution-stats")
+@click.pass_context
+def themes_evolution_stats(ctx: click.Context) -> None:
+    """显示主题演进统计"""
+    try:
+        evolution_store = EvolutionStore()
+        theme_store = ThemeStore()
+
+        stats = evolution_store.get_stats()
+
+        console.print(Panel(
+            f"[bold]演进建议总数:[/bold] {stats['total_suggestions']}\n"
+            f"[bold]涉及主题数:[/bold] {stats['themes_with_suggestions']}",
+            title="📊 主题演进统计",
+            border_style="blue"
+        ))
+
+        # 状态分布
+        if stats['status_distribution']:
+            console.print()
+            console.print("[bold]状态分布:[/bold]")
+            status_names = {
+                'pending': '待处理',
+                'applied': '已应用',
+                'rejected': '已拒绝',
+                'rolled_back': '已回滚'
+            }
+            for status, count in sorted(stats['status_distribution'].items(), key=lambda x: x[1], reverse=True):
+                name = status_names.get(status, status)
+                bar = "█" * min(count, 20)
+                console.print(f"  {name:10s} {bar} {count}")
+
+        # 冲突类型分布
+        if stats['conflict_type_distribution']:
+            console.print()
+            console.print("[bold]冲突类型分布:[/bold]")
+            conflict_names = {
+                'content_conflict': '内容冲突',
+                'tag_mismatch': '标签不匹配',
+                'reinforcement': '强化确认',
+                'obsolete': '过时废弃'
+            }
+            for ctype, count in sorted(stats['conflict_type_distribution'].items(), key=lambda x: x[1], reverse=True):
+                name = conflict_names.get(ctype, ctype)
+                bar = "█" * min(count, 20)
+                console.print(f"  {name:10s} {bar} {count}")
+
+        # 显示有建议的主题列表
+        pending = evolution_store.get_pending_suggestions()
+        if pending:
+            console.print()
+            console.print("[bold]待处理建议:[/bold]")
+            for suggestion in pending[:10]:  # 最多显示10个
+                theme = theme_store.get_theme(suggestion.theme_id)
+                theme_summary = theme.summary[:30] if theme else "未知主题"
+                conflict_names = {
+                    'content_conflict': '内容冲突',
+                    'tag_mismatch': '标签不匹配',
+                    'reinforcement': '强化',
+                    'obsolete': '过时'
+                }
+                ctype_name = conflict_names.get(suggestion.conflict_type.value, suggestion.conflict_type.value)
+                console.print(f"  • [{ctype_name}] {theme_summary}...")
+                if suggestion.suggested_summary:
+                    console.print(f"    建议: {suggestion.suggested_summary[:50]}...")
+
+        if stats['last_updated']:
+            console.print()
+            console.print(f"[dim]最后更新: {stats['last_updated']}[/dim]")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 获取统计失败: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def node() -> None:
+    """节点管理命令"""
+    pass
+
+
+@node.command("refine")
+@click.argument("node_id")
+@click.option("--mock", is_flag=True, help="使用模拟处理器（不调用API）")
+@click.pass_context
+def node_refine(ctx: click.Context, node_id: str, mock: bool) -> None:
+    """重新生成节点的精炼内容"""
+    try:
+        store = get_store()
+
+        # 尝试通过部分ID查找
+        if len(node_id) < 36:
+            all_nodes = store.list_all()
+            matching = [n for n in all_nodes if n.id.startswith(node_id)]
+            if len(matching) == 1:
+                node = matching[0]
+            elif len(matching) > 1:
+                console.print(f"[yellow]多个节点匹配 '{node_id}':[/yellow]")
+                for n in matching:
+                    console.print(f"  - {n.id}: {n.processed.proposition[:50]}...")
+                return
+            else:
+                node = None
+        else:
+            node = store.get(node_id)
+
+        if not node:
+            console.print(f"[red]✗[/red] 未找到节点: {node_id}")
+            sys.exit(1)
+
+        console.print(f"[dim]正在重新生成节点 {node.id[:8]} 的精炼内容...[/dim]")
+        console.print(f"[dim]原始命题: {node.processed.proposition[:60]}...[/dim]")
+        console.print()
+
+        # 使用LLM处理器重新生成
+        processor = get_processor(use_mock=mock)
+
+        async def refine():
+            return await processor.regenerate_refined_content(node)
+
+        with console.status("[bold green]正在使用LLM重新生成..."):
+            refined_content = asyncio.run(refine())
+
+        if refined_content:
+            # 更新节点
+            node.processed.refined_content = refined_content
+            store.save(node)
+
+            console.print()
+            console.print("[green]✓[/green] 精炼内容已重新生成并保存")
+            console.print()
+            console.print("[bold]新生成的精炼内容:[/bold]")
+            console.print(Panel(refined_content, border_style="green"))
+        else:
+            console.print("[yellow]⚠[/yellow] 未能生成精炼内容")
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 重新生成失败: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def node() -> None:
+    """节点管理命令"""
+    pass
+
+
+@node.command("refine")
+@click.argument("node_id")
+@click.option("--mock", is_flag=True, help="使用模拟处理器（不调用API）")
+@click.pass_context
+def node_refine(
+    ctx: click.Context,
+    node_id: str,
+    mock: bool
+) -> None:
+    """重新生成节点的精炼内容
+
+    使用LLM处理器重新生成节点的精炼内容，基于原始输入创建结构化、易读的版本。
+    适用于内容优化和重新组织。
+    """
+    try:
+        store = get_store()
+
+        # 尝试通过部分ID查找
+        if len(node_id) < 36:
+            all_nodes = store.list_all()
+            matching = [n for n in all_nodes if n.id.startswith(node_id)]
+            if len(matching) == 1:
+                target_node = matching[0]
+            elif len(matching) > 1:
+                console.print(f"[yellow]多个节点匹配 '{node_id}':[/yellow]")
+                for n in matching:
+                    console.print(f"  - {n.id}: {n.processed.proposition[:50]}...")
+                return
+            else:
+                target_node = None
+        else:
+            target_node = store.get(node_id)
+
+        if not target_node:
+            console.print(f"[red]✗[/red] 未找到节点: {node_id}")
+            sys.exit(1)
+
+        console.print(f"[dim]正在重新生成节点 {target_node.id[:8]} 的精炼内容...[/dim]")
+
+        # 使用LLM处理器重新生成精炼内容
+        processor = get_processor(use_mock=mock)
+
+        async def do_refine():
+            return await processor.process(
+                raw_input=target_node.raw_input,
+                source=target_node.source,
+                existing_nodes=[]
+            )
+
+        processed, tags, potential_links, refined_content = asyncio.run(do_refine())
+
+        # 更新节点的精炼内容
+        updated_node = store.update_refined_content(
+            node_id=target_node.id,
+            refined_content=refined_content,
+            auto_save=True
+        )
+
+        if not updated_node:
+            console.print(f"[red]✗[/red] 更新精炼内容失败")
+            sys.exit(1)
+
+        console.print()
+        console.print(Panel(
+            f"[bold green]精炼内容已重新生成！[/bold green]\n"
+            f"节点ID: [cyan]{updated_node.id[:8]}[/cyan]\n"
+            f"版本: [yellow]{updated_node.refined_content_version}[/yellow]",
+            title="✓ 成功",
+            border_style="green"
+        ))
+
+        console.print()
+        console.print("[bold]新的精炼内容:[/bold]")
+        console.print(Panel(updated_node.refined_content or "", border_style="blue"))
+
+    except Exception as e:
+        if ctx.obj.get("debug"):
+            raise
+        console.print(f"[red]✗[/red] 精炼内容生成失败: {e}")
         sys.exit(1)
 
 

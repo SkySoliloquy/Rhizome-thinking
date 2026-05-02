@@ -40,6 +40,8 @@ class PreciseQueryResultItem(BaseModel):
     id: str
     proposition: str
     raw_input: str
+    refined_content: Optional[str] = None
+    has_refined_content: bool = False
     tags: list[str]
     timestamp: str
     source_title: Optional[str] = None
@@ -57,6 +59,8 @@ class QueryResultItem(BaseModel):
     """Single query result item."""
     id: str
     proposition: str
+    refined_content: Optional[str] = None
+    has_refined_content: bool = False
     tags: list[str]
     timestamp: str
     similarity: float
@@ -80,9 +84,14 @@ class ClusterViewResponse(BaseModel):
 
 def _convert_result_to_item(result: QueryResult) -> QueryResultItem:
     """Convert QueryResult to QueryResultItem."""
+    # Prioritize refined_content: use node.refined_content if available,
+    # otherwise fall back to processed.refined_content
+    refined = result.node.refined_content or result.node.processed.refined_content or None
     return QueryResultItem(
         id=result.node.id,
         proposition=result.node.processed.proposition,
+        refined_content=refined,
+        has_refined_content=bool(refined),
         tags=result.node.tags,
         timestamp=result.node.timestamp.isoformat(),
         similarity=round(result.similarity, 2),
@@ -181,18 +190,31 @@ async def precise_query(
             limit=request.limit
         )
 
-        result_items = [
-            PreciseQueryResultItem(
-                id=node.id,
-                proposition=node.processed.proposition,
-                raw_input=node.raw_input[:200] + "..." if len(node.raw_input) > 200 else node.raw_input,
-                tags=node.tags,
-                timestamp=node.timestamp.isoformat(),
-                source_title=node.source.title,
-                source_location=node.source.location
+        result_items = []
+        for node in results:
+            # Prioritize refined_content over raw_input
+            refined = node.refined_content or node.processed.refined_content or None
+            has_refined = bool(refined)
+
+            # For display, use refined_content if available, otherwise truncate raw_input
+            if refined:
+                display_content = refined[:200] + "..." if len(refined) > 200 else refined
+            else:
+                display_content = node.raw_input[:200] + "..." if len(node.raw_input) > 200 else node.raw_input
+
+            result_items.append(
+                PreciseQueryResultItem(
+                    id=node.id,
+                    proposition=node.processed.proposition,
+                    raw_input=display_content,
+                    refined_content=refined,
+                    has_refined_content=has_refined,
+                    tags=node.tags,
+                    timestamp=node.timestamp.isoformat(),
+                    source_title=node.source.title,
+                    source_location=node.source.location
+                )
             )
-            for node in results
-        ]
 
         return PreciseQueryResponse(
             results=result_items,
@@ -221,17 +243,23 @@ async def keyword_search(
     """Simple keyword search in propositions."""
     results = node_store.search_by_proposition(q, limit=limit)
 
+    result_items = []
+    for node, score in results:
+        # Prioritize refined_content
+        refined = node.refined_content or node.processed.refined_content or None
+
+        result_items.append({
+            "id": node.id,
+            "proposition": node.processed.proposition,
+            "refined_content": refined,
+            "has_refined_content": bool(refined),
+            "tags": node.tags,
+            "timestamp": node.timestamp.isoformat(),
+            "score": score
+        })
+
     return {
-        "results": [
-            {
-                "id": node.id,
-                "proposition": node.processed.proposition,
-                "tags": node.tags,
-                "timestamp": node.timestamp.isoformat(),
-                "score": score
-            }
-            for node, score in results
-        ],
+        "results": result_items,
         "query": q,
         "total": len(results)
     }

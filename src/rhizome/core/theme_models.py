@@ -7,9 +7,40 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_serializer
 
 
+class ThemeVersion(BaseModel):
+    """Theme version history entry."""
+
+    version: int = Field(
+        ...,
+        description="Version number of this theme state",
+        ge=1
+    )
+    summary: str = Field(
+        ...,
+        description="Summary of the theme at this version",
+        min_length=1
+    )
+    tag: str = Field(
+        ...,
+        description="Primary tag of the theme at this version"
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now,
+        description="When this version was recorded"
+    )
+    reason: str = Field(
+        default="",
+        description="Reason for this version change"
+    )
+
+    @field_serializer("updated_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        return value.isoformat()
+
+
 class Theme(BaseModel):
     """Aggregated theme from multiple nodes."""
-    
+
     id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
         description="Theme unique identifier"
@@ -39,6 +70,19 @@ class Theme(BaseModel):
         default_factory=list,
         description="Keywords extracted from related nodes"
     )
+    version: int = Field(
+        default=1,
+        description="Current version of the theme",
+        ge=1
+    )
+    evolution_history: list[ThemeVersion] = Field(
+        default_factory=list,
+        description="History of theme evolution versions"
+    )
+    evolution_status: str = Field(
+        default="stable",
+        description="Current evolution status: stable, evolving, merged, deprecated"
+    )
     
     @field_serializer("created_at", "updated_at")
     def serialize_datetime(self, value: datetime) -> str:
@@ -62,6 +106,23 @@ class Theme(BaseModel):
     def node_count(self) -> int:
         """Get number of nodes in this theme."""
         return len(self.node_ids)
+
+    def record_version(self, reason: str = "") -> None:
+        """Record current state as a new version in evolution history.
+
+        Args:
+            reason: Reason for this version change
+        """
+        version_entry = ThemeVersion(
+            version=self.version,
+            summary=self.summary,
+            tag=self.tag,
+            updated_at=self.updated_at,
+            reason=reason
+        )
+        self.evolution_history.append(version_entry)
+        self.version += 1
+        self.updated_at = datetime.now()
 
 
 class NodeTheme(BaseModel):

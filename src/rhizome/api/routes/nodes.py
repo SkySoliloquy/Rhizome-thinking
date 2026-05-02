@@ -1,22 +1,52 @@
 """Node management API routes."""
 
+import asyncio
 import logging
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from rhizome.core.models import Node, Source, TagType
+from rhizome.core.models import Node, Processed, Source, TagType
 from rhizome.core.node_store import NodeStore
 from rhizome.core.llm_processor import LLMProcessor, MockLLMProcessor
 from rhizome.core.theme_extractor import ThemeExtractor, MockThemeExtractor
 from rhizome.core.theme_store import ThemeStore
 from rhizome.core.theme_models import Theme, NodeTheme
+from rhizome.core.events import (
+    publish_node_created,
+    setup_default_handlers,
+    get_event_bus,
+    NodeCreatedEvent,
+    RelationshipAnalysisHandler,
+    ThemeEvolutionHandler,
+)
 from rhizome.retrieval.vector_store import VectorStore, get_vector_store
 from rhizome.api.dependencies import get_node_store
 from rhizome.retrieval.search_optimizer import invalidate_theme_cache
 
 logger = logging.getLogger(__name__)
+
+# Initialize event handlers on module load
+def _init_event_handlers():
+    """Initialize event handlers with stores."""
+    try:
+        node_store = NodeStore()
+        theme_store = ThemeStore()
+        setup_default_handlers(node_store=node_store, theme_store=theme_store)
+    except Exception as e:
+        logger.warning(f"Failed to setup default event handlers: {e}")
+
+# Lazy initialization flag
+_handlers_initialized = False
+
+def ensure_handlers_initialized():
+    """Ensure event handlers are initialized."""
+    global _handlers_initialized
+    if not _handlers_initialized:
+        _init_event_handlers()
+        _handlers_initialized = True
 
 router = APIRouter()
 
@@ -37,6 +67,29 @@ class UpdateNodeRequest(BaseModel):
     open_questions: Optional[list[str]] = Field(default=None, description="开放问题列表")
     source_title: Optional[str] = Field(default=None, description="来源标题")
     source_location: Optional[str] = Field(default=None, description="来源位置")
+
+
+class RefineContentResponse(BaseModel):
+    """Response after regenerating refined content."""
+    node_id: str
+    refined_content: str
+    version: int
+    last_refined_at: str
+    message: str = "精炼内容已重新生成"
+
+
+class UpdateRefinedContentRequest(BaseModel):
+    """Request to manually update refined content."""
+    refined_content: str = Field(..., min_length=1, description="精炼内容")
+
+
+class UpdateRefinedContentResponse(BaseModel):
+    """Response after manually updating refined content."""
+    node_id: str
+    refined_content: str
+    version: int
+    last_refined_at: str
+    message: str = "精炼内容已更新"
 
 
 class CreateNodeResponse(BaseModel):
@@ -71,8 +124,12 @@ async def create_node(
     1. Process raw input with LLM
     2. Generate embeddings
     3. Store in both file system and vector database
+    4. Trigger async relationship analysis and theme evolution detection
     """
     try:
+        # Ensure event handlers are initialized
+        ensure_handlers_initialized()
+
         # Create source
         source = Source(
             type=request.source_type,  # type: ignore
@@ -86,7 +143,7 @@ async def create_node(
         # Try to use real LLM processor, fallback to mock if it fails
         processor = LLMProcessor()
         try:
-            processed, tags, potential_links = await processor.process(
+            processed, tags, potential_links, refined_content = await processor.process(
                 raw_input=request.raw_input,
                 source=source,
                 existing_nodes=existing_nodes
@@ -96,7 +153,7 @@ async def create_node(
             logger.warning(f"LLM processor failed, using mock: {llm_error}")
             # Fallback to mock processor
             mock_processor = MockLLMProcessor()
-            processed, tags, potential_links = await mock_processor.process(
+            processed, tags, potential_links, refined_content = await mock_processor.process(
                 raw_input=request.raw_input,
                 source=source,
                 existing_nodes=existing_nodes
@@ -107,7 +164,8 @@ async def create_node(
             source=source,
             raw_input=request.raw_input,
             processed=processed,
-            tags=tags  # type: ignore
+            tags=tags,  # type: ignore
+            refined_content=refined_content if refined_content else None
         )
 
         # Match potential_links to existing nodes and create Link objects
@@ -174,11 +232,32 @@ async def create_node(
             logger.warning(f"Theme extraction failed for node {node.id[:8]}: {theme_error}")
             # Don't fail the node creation if theme extraction fails
 
+        # Trigger async relationship analysis and theme evolution detection
+        async def trigger_post_creation_analysis():
+            """Run post-creation analysis tasks in background."""
+            try:
+                # Publish node created event to trigger handlers
+                tasks = await publish_node_created(
+                    node=node,
+                    metadata={"source": "api", "auto_analysis": True}
+                )
+                if tasks:
+                    # Wait for all analysis tasks to complete
+                    await asyncio.gather(*tasks, return_exceptions=True)
+                    logger.info(f"节点 {node.id[:8]} 后创建分析完成")
+            except Exception as analysis_error:
+                # Log but don't fail the request
+                logger.warning(f"后创建分析失败: {analysis_error}")
+
+        # Create background task for non-blocking execution
+        asyncio.create_task(trigger_post_creation_analysis())
+        logger.info(f"已触发节点 {node.id[:8]} 的异步分析任务")
+
         return CreateNodeResponse(
             node=node,
             potential_links=potential_links
         )
-        
+
     except Exception as e:
         logger.exception("Failed to create node")
         raise HTTPException(status_code=500, detail=f"创建节点失败: {str(e)}")
@@ -289,6 +368,100 @@ async def delete_node(
     invalidate_theme_cache()
 
     return {"message": "节点已删除", "node_id": node_id}
+
+
+@router.post("/nodes/{node_id}/refine", response_model=RefineContentResponse)
+async def refine_node_content(
+    node_id: str,
+    node_store: NodeStore = Depends(get_node_store)
+):
+    """重新生成节点的精炼内容。
+
+    使用LLM处理器重新生成节点的精炼内容，基于原始输入创建结构化、易读的版本。
+    """
+    node = node_store.get(node_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="节点未找到")
+
+    try:
+        # Use regenerate_refined_content for better quality
+        processor = LLMProcessor()
+        try:
+            refined_content = await processor.regenerate_refined_content(node)
+            logger.info(f"Using real LLM processor to refine node {node_id[:8]}")
+        except Exception as llm_error:
+            logger.warning(f"LLM processor failed, using mock: {llm_error}")
+            # Fallback to mock processor
+            mock_processor = MockLLMProcessor()
+            refined_content = await mock_processor.regenerate_refined_content(node)
+
+        # Update node's refined content using the NodeStore method
+        updated_node = node_store.update_refined_content(
+            node_id=node_id,
+            refined_content=refined_content,
+            auto_save=True
+        )
+
+        if not updated_node:
+            raise HTTPException(status_code=500, detail="更新精炼内容失败")
+
+        invalidate_theme_cache()
+
+        return RefineContentResponse(
+            node_id=node_id,
+            refined_content=updated_node.refined_content or "",
+            version=updated_node.refined_content_version,
+            last_refined_at=updated_node.last_refined_at.isoformat() if updated_node.last_refined_at else datetime.now().isoformat(),
+            message="精炼内容已重新生成"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Failed to refine node content")
+        raise HTTPException(status_code=500, detail=f"精炼内容生成失败: {str(e)}")
+
+
+@router.put("/nodes/{node_id}/refined-content", response_model=UpdateRefinedContentResponse)
+async def update_refined_content(
+    node_id: str,
+    request: UpdateRefinedContentRequest,
+    node_store: NodeStore = Depends(get_node_store)
+):
+    """手动编辑节点的精炼内容。
+
+    允许用户直接编辑节点的精炼内容，适用于人工润色和修正。
+    """
+    node = node_store.get(node_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="节点未找到")
+
+    try:
+        # Update node's refined content using the NodeStore method
+        updated_node = node_store.update_refined_content(
+            node_id=node_id,
+            refined_content=request.refined_content,
+            auto_save=True
+        )
+
+        if not updated_node:
+            raise HTTPException(status_code=500, detail="更新精炼内容失败")
+
+        invalidate_theme_cache()
+
+        return UpdateRefinedContentResponse(
+            node_id=node_id,
+            refined_content=updated_node.refined_content or "",
+            version=updated_node.refined_content_version,
+            last_refined_at=updated_node.last_refined_at.isoformat() if updated_node.last_refined_at else datetime.now().isoformat(),
+            message="精炼内容已更新"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Failed to update refined content")
+        raise HTTPException(status_code=500, detail=f"精炼内容更新失败: {str(e)}")
 
 
 async def extract_themes_for_node(node: Node) -> list[Theme]:

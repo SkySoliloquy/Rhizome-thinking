@@ -61,43 +61,72 @@ class ThemeStore:
     
     def save_theme(self, theme: Theme) -> None:
         """Save a theme to storage.
-        
+
         Args:
             theme: The theme to save
         """
         theme_path = self._get_theme_path(theme.id)
         with open(theme_path, "w", encoding="utf-8") as f:
             json.dump(theme.model_dump(), f, indent=2, ensure_ascii=False)
-        
+
         # Update index
         self._index["themes"][theme.id] = {
             "id": theme.id,
             "summary": theme.summary[:500],
             "tag": theme.tag,
             "node_count": len(theme.node_ids),
-            "updated_at": theme.updated_at.isoformat()
+            "updated_at": theme.updated_at.isoformat(),
+            "version": getattr(theme, "version", 1),
+            "evolution_status": getattr(theme, "evolution_status", "stable")
         }
         self._save_index()
     
     def get_theme(self, theme_id: str) -> Optional[Theme]:
         """Retrieve a theme by ID.
-        
+
         Args:
             theme_id: The theme ID
-            
+
         Returns:
             The theme if found, None otherwise
         """
         theme_path = self._get_theme_path(theme_id)
-        
+
         if not theme_path.exists():
             return None
-        
+
         with open(theme_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         return Theme(**data)
-    
+
+    def get_theme_history(self, theme_id: str) -> Optional[list[dict]]:
+        """Get evolution history of a theme.
+
+        Args:
+            theme_id: The theme ID
+
+        Returns:
+            List of version history entries if theme found, None otherwise
+        """
+        theme = self.get_theme(theme_id)
+        if not theme:
+            return None
+
+        # Convert ThemeVersion objects to dicts
+        history = [
+            {
+                "version": v.version,
+                "summary": v.summary,
+                "tag": v.tag,
+                "updated_at": v.updated_at.isoformat(),
+                "reason": v.reason
+            }
+            for v in theme.evolution_history
+        ]
+
+        return history
+
     def delete_theme(self, theme_id: str) -> bool:
         """Delete a theme.
         

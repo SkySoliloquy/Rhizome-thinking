@@ -70,6 +70,8 @@ class NodeStore:
             "tags": node.tags,
             "link_count": len(node.links),
             "confirmed_link_count": sum(1 for link in node.links if link.confirmed),
+            "has_refined_content": node.refined_content is not None,
+            "refined_content_version": node.refined_content_version,
         }
         self._save_index()
     
@@ -100,22 +102,27 @@ class NodeStore:
     
     def get(self, node_id: str) -> Optional[Node]:
         """Retrieve a node by ID.
-        
+
         Args:
             node_id: The node ID
-            
+
         Returns:
             The node if found, None otherwise
         """
         node_path = self._get_node_path(node_id)
-        
+
         if not node_path.exists():
             return None
-        
-        with open(node_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        
-        return Node.from_markdown(content)
+
+        try:
+            with open(node_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            return Node.from_markdown(content)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to parse node {node_id}: {e}")
+            return None
     
     def exists(self, node_id: str) -> bool:
         """Check if a node exists.
@@ -348,6 +355,37 @@ class NodeStore:
             node.source.title = source_title
         if source_location is not None:
             node.source.location = source_location
+
+        if auto_save:
+            self.save(node)
+
+        return node
+
+    def update_refined_content(
+        self,
+        node_id: str,
+        refined_content: str,
+        auto_save: bool = True
+    ) -> Optional[Node]:
+        """Update the refined content of a node.
+
+        Args:
+            node_id: The node ID
+            refined_content: New refined content
+            auto_save: Whether to save immediately
+
+        Returns:
+            Updated node if found, None otherwise
+        """
+        from datetime import datetime
+
+        node = self.get(node_id)
+        if not node:
+            return None
+
+        node.refined_content = refined_content
+        node.refined_content_version += 1
+        node.last_refined_at = datetime.now()
 
         if auto_save:
             self.save(node)

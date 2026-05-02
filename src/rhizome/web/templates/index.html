@@ -114,6 +114,18 @@
                     </div>
                 </div>
 
+                <!-- Batch Refine Toggle (only shown in precise mode) -->
+                <div class="control-section" id="batchRefineControl" style="display: none;">
+                    <label class="control-label">批量操作</label>
+                    <button id="batchRefineToggleBtn" class="batch-refine-toggle" title="批量生成精炼内容">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        <span>批量生成</span>
+                    </button>
+                </div>
+
                 <!-- Semantic Search Options -->
                 <div id="semanticSearchOptions">
                     <div class="control-section">
@@ -220,6 +232,24 @@
                         </svg>
                         <span>关系图</span>
                     </button>
+                    <button class="nav-item" data-view="relationshipManagerView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>关系管理</span>
+                    </button>
+                    <button class="nav-item" data-view="relationshipGraphView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <line x1="2" y1="7" x2="12" y2="12"></line>
+                            <line x1="22" y1="7" x2="12" y2="12"></line>
+                            <line x1="12" y1="12" x2="12" y2="22"></line>
+                        </svg>
+                        <span>关系图谱</span>
+                    </button>
                     <button class="nav-item" data-view="statsView">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -284,6 +314,27 @@
                                     <span class="step-label">完成</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <!-- Batch Refine Toolbar -->
+                    <div id="batchRefineToolbar" class="batch-toolbar" style="display: none;">
+                        <div class="batch-toolbar-info">
+                            <span id="batchSelectedCount">已选择 0 个节点</span>
+                        </div>
+                        <div class="batch-toolbar-actions">
+                            <button id="batchRefineConfirmBtn" class="batch-btn batch-btn-primary" disabled>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                确认生成
+                            </button>
+                            <button id="batchRefineCancelBtn" class="batch-btn batch-btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                取消
+                            </button>
                         </div>
                     </div>
                     <div id="searchResults" class="search-results">
@@ -553,6 +604,209 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- View: Relationship Manager (关系管理 - 待确认建议) -->
+                <div id="relationshipManagerView" class="view">
+                    <div class="view-header">
+                        <h2>关系管理</h2>
+                        <div class="view-controls">
+                            <select id="suggestionFilter" class="modifier-select">
+                                <option value="all">所有建议</option>
+                                <option value="high_confidence">高置信度</option>
+                                <option value="medium_confidence">中置信度</option>
+                                <option value="low_confidence">低置信度</option>
+                            </select>
+                            <button id="refreshSuggestions" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="suggestions-stats-bar" id="suggestionsStats">
+                        <span>待确认: <strong>-</strong></span>
+                        <span>当前页: <strong>-</strong></span>
+                    </div>
+                    <div id="suggestionsContent" class="suggestions-content">
+                        <div class="empty-state">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                    <div class="suggestions-pagination">
+                        <button id="prevPage" class="btn-secondary" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            上一页
+                        </button>
+                        <span id="pageInfo" class="page-info">1 / 1</span>
+                        <button id="nextPage" class="btn-secondary" disabled>
+                            下一页
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View: Relationship Graph (关系图谱) -->
+                <div id="relationshipGraphView" class="view">
+                    <div class="view-header">
+                        <h2>关系图谱</h2>
+                        <div class="view-controls">
+                            <select id="relGraphTagFilter" class="modifier-select">
+                                <option value="all">所有标签</option>
+                                <option value="definitive">明确结论</option>
+                                <option value="inferred">推断结论</option>
+                                <option value="vague">模糊感知</option>
+                                <option value="needs_thinking">待思考</option>
+                                <option value="cross-domain">跨域连接</option>
+                            </select>
+                            <select id="relGraphThemeFilter" class="modifier-select">
+                                <option value="all">所有主题</option>
+                            </select>
+                            <select id="relGraphRelationFilter" class="modifier-select">
+                                <option value="all">所有关系</option>
+                                <option value="support">支持</option>
+                                <option value="contradict">矛盾</option>
+                                <option value="extend">延伸</option>
+                                <option value="source">来源</option>
+                                <option value="analogy">类比</option>
+                            </select>
+                            <button id="refreshRelGraph" class="btn-secondary" title="刷新">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                            <button id="relGraphLayoutBtn" class="btn-secondary" title="重新布局">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="rel-graph-stats-bar" id="relGraphStats">
+                        <span>节点: <strong>-</strong></span>
+                        <span>连接: <strong>-</strong></span>
+                    </div>
+                    <div id="relationshipGraphCanvas" class="relationship-graph-canvas">
+                        <!-- Cytoscape will render here -->
+                    </div>
+                    <div class="graph-legend">
+                        <div class="legend-section">
+                            <span class="legend-title">关系类型:</span>
+                            <span class="legend-item"><span class="line" style="background:#00b894"></span>支持</span>
+                            <span class="legend-item"><span class="line" style="background:#e74c3c"></span>矛盾</span>
+                            <span class="legend-item"><span class="line" style="background:#6c5ce7"></span>延伸</span>
+                            <span class="legend-item"><span class="line" style="background:#fdcb6e"></span>来源</span>
+                            <span class="legend-item"><span class="line" style="background:#00cec9"></span>类比</span>
+                        </div>
+                        <div class="legend-section" style="margin-left: 24px;">
+                            <span class="legend-title">线条样式:</span>
+                            <span class="legend-item"><span class="line" style="background:#a0a0b0"></span>已确认</span>
+                            <span class="legend-item"><span class="line dashed" style="background:#a0a0b0"></span>待确认</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Node Detail (节点详情) -->
+                <div id="nodeDetailView" class="view">
+                    <div class="view-header">
+                        <h2>节点详情</h2>
+                        <div class="view-controls">
+                            <button id="backFromNodeDetail" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                                </svg>
+                                返回
+                            </button>
+                        </div>
+                    </div>
+                    <div id="nodeDetailContent" class="node-detail-content-wrapper">
+                        <div class="empty-state">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Theme Detail (主题详情) -->
+                <div id="themeDetailView" class="view">
+                    <div class="view-header">
+                        <h2>主题详情</h2>
+                        <div class="view-controls">
+                            <button id="backFromThemeDetail" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                                </svg>
+                                返回
+                            </button>
+                        </div>
+                    </div>
+                    <div id="themeDetailContent" class="theme-detail-content-wrapper">
+                        <div class="empty-state">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Theme Evolution (主题演化视图) -->
+                <div id="themeEvolutionView" class="view">
+                    <div class="view-header">
+                        <h2>主题演化</h2>
+                        <div class="view-controls">
+                            <button id="analyzeEvolutionBtn" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                </svg>
+                                分析演进
+                            </button>
+                            <button id="refreshEvolutionBtn" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="evolutionThemeHeader" class="evolution-header">
+                        <!-- Dynamic header content -->
+                    </div>
+                    <div id="themeEvolutionContent" class="evolution-content">
+                        <div class="empty-state">
+                            <p>选择一个主题查看演化历史</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Theme Conflicts (主题冲突视图) -->
+                <div id="themeConflictView" class="view">
+                    <div class="view-header">
+                        <h2>主题冲突</h2>
+                        <div class="view-controls">
+                            <button id="refreshConflictsBtn" class="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="themeConflictContent" class="conflict-content">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p>暂无冲突</p>
+                            <p style="color: var(--color-text-muted); font-size: 0.875rem;">所有主题都处于一致状态</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -601,6 +855,24 @@
                     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                 </svg>
                 <span>关系图</span>
+            </button>
+            <button class="nav-item" data-view="relationshipManagerView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>关系管理</span>
+            </button>
+            <button class="nav-item" data-view="relationshipGraphView">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <line x1="2" y1="7" x2="12" y2="12"></line>
+                    <line x1="22" y1="7" x2="12" y2="12"></line>
+                    <line x1="12" y1="12" x2="12" y2="22"></line>
+                </svg>
+                <span>关系图谱</span>
             </button>
             <button class="nav-item" data-view="statsView">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -784,7 +1056,7 @@
     <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
     <!-- Scripts -->
-    <script src="/static/js/views.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/views.js?v=6"></script>
+    <script src="/static/js/app.js?v=6"></script>
 </body>
 </html>

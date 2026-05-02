@@ -25,6 +25,39 @@ class ThemeResponse(BaseModel):
     node_ids: list[str]
     created_at: str
     updated_at: str
+    version: int = Field(default=1, description="Current version of the theme")
+    evolution_status: str = Field(default="stable", description="Current evolution status: stable, evolving, merged, deprecated")
+
+
+class ThemeNodeResponse(BaseModel):
+    """Node information within a theme, including relationship strength."""
+    id: str
+    proposition: str
+    tags: list[str]
+    timestamp: str
+    relationship_strength: float = Field(default=1.0, description="Strength of node's relationship to this theme (0.0-1.0)")
+    source_title: Optional[str] = Field(default=None, description="Source title if available")
+    source_type: str = Field(default="original", description="Source type")
+
+
+class ThemeRelatedResponse(BaseModel):
+    """Related theme information."""
+    id: str
+    summary: str
+    tag: str
+    node_count: int
+    shared_nodes: list[str] = Field(description="Node IDs shared between themes")
+    shared_count: int = Field(description="Number of shared nodes")
+    similarity_score: float = Field(description="Calculated similarity based on shared nodes (0.0-1.0)")
+
+
+class ThemeHistoryResponse(BaseModel):
+    """Theme evolution history response."""
+    version: int
+    summary: str
+    tag: str
+    updated_at: str
+    reason: str
 
 
 class AggregatedSearchResponse(BaseModel):
@@ -50,8 +83,43 @@ def _convert_theme_to_response(theme: Theme) -> ThemeResponse:
         keywords=theme.keywords,
         node_ids=theme.node_ids,
         created_at=theme.created_at.isoformat(),
-        updated_at=theme.updated_at.isoformat()
+        updated_at=theme.updated_at.isoformat(),
+        version=getattr(theme, 'version', 1),
+        evolution_status=getattr(theme, 'evolution_status', 'stable')
     )
+
+
+def _calculate_relationship_strength(node, theme: Theme) -> float:
+    """Calculate relationship strength between a node and a theme.
+    
+    Strength is based on:
+    - Whether node shares keywords with theme
+    - Node's link density to other nodes in the same theme
+    
+    Args:
+        node: The node object
+        theme: The theme object
+        
+    Returns:
+        Relationship strength between 0.0 and 1.0
+    """
+    strength = 0.5  # Base strength
+    
+    # Boost if node's keywords overlap with theme keywords
+    if hasattr(node, 'processed') and node.processed:
+        node_text = node.processed.proposition.lower()
+        keyword_matches = sum(1 for kw in theme.keywords if kw.lower() in node_text)
+        if theme.keywords:
+            strength += (keyword_matches / len(theme.keywords)) * 0.3
+    
+    # Boost if node has links to other nodes in the theme
+    if hasattr(node, 'links') and node.links:
+        theme_node_ids = set(theme.node_ids)
+        linked_to_theme = sum(1 for link in node.links if link.target_id in theme_node_ids)
+        if len(node.links) > 0:
+            strength += (linked_to_theme / len(node.links)) * 0.2
+    
+    return min(strength, 1.0)
 
 
 def _traditional_theme_search(anchor: str, themes: list[Theme]) -> list[tuple[Theme, float]]:
@@ -163,6 +231,128 @@ async def get_theme_detail(
     )
 
 
+@router.get("/themes/{theme_id}/nodes", response_model=list[ThemeNodeResponse])
+async def get_theme_nodes(
+    theme_id: str,
+    include_relationship_strength: bool = Query(default=True, description="Calculate and include relationship strength")
+):
+    """Get detailed information of all nodes in a theme.
+    
+    Each node includes its relationship strength to this theme,
+    which is calculated based on keyword overlap and link density.
+    """
+    theme_store = ThemeStore()
+    node_store = NodeStore()
+    
+    # Get theme
+    theme = theme_store.get_theme(theme_id)
+    if not theme:
+        raise HTTPException(status_code=404, detail="Theme not found")
+    
+    # Get nodes with detailed information
+    nodes = []
+    for node_id in theme.node_ids:
+        node = node_store.get(node_id)
+        if node:
+            # Calculate relationship strength
+            strength = 1.0
+            if include_relationship_strength:
+                strength = _calculate_relationship_strength(node, theme)
+            
+            nodes.append(ThemeNodeResponse(
+                id=node.id,
+                proposition=node.processed.proposition,
+                tags=node.tags,
+                timestamp=node.timestamp.isoformat(),
+                relationship_strength=strength,
+                source_title=node.source.title,
+                source_type=node.source.type
+            ))
+    
+    # Sort by relationship strength (descending)
+    nodes.sort(key=lambda n: n.relationship_strength, reverse=True)
+    
+    return nodes
+
+
+@router.get("/themes/{theme_id}/related", response_model=list[ThemeRelatedResponse])
+async def get_related_themes(
+    theme_id: str,
+    min_shared_nodes: int = Query(default=1, ge=1, description="Minimum number of shared nodes"),
+    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of related themes to return")
+):
+    """Get related themes (themes that share nodes with this theme).
+    
+    Related themes are found by identifying other themes that share
+    one or more nodes with the specified theme. The similarity score
+    is calculated based on the proportion of shared nodes.
+    """
+    theme_store = ThemeStore()
+    
+    # Get source theme
+    source_theme = theme_store.get_theme(theme_id)
+    if not source_theme:
+        raise HTTPException(status_code=404, detail="Theme not found")
+    
+    source_node_ids = set(source_theme.node_ids)
+    if not source_node_ids:
+        return []
+    
+    # Get all other themes
+    all_themes = theme_store.get_all_themes()
+    
+    # Find related themes based on shared nodes
+    related = []
+    for theme in all_themes:
+        if theme.id == theme_id:
+            continue
+        
+        theme_node_ids = set(theme.node_ids)
+        shared_nodes = source_node_ids & theme_node_ids
+        
+        if len(shared_nodes) >= min_shared_nodes:
+            # Calculate similarity score based on Jaccard similarity
+            union_size = len(source_node_ids | theme_node_ids)
+            similarity = len(shared_nodes) / union_size if union_size > 0 else 0.0
+            
+            related.append(ThemeRelatedResponse(
+                id=theme.id,
+                summary=theme.summary,
+                tag=theme.tag,
+                node_count=theme.node_count,
+                shared_nodes=list(shared_nodes),
+                shared_count=len(shared_nodes),
+                similarity_score=round(similarity, 3)
+            ))
+    
+    # Sort by similarity score (descending) then by shared count
+    related.sort(key=lambda r: (r.similarity_score, r.shared_count), reverse=True)
+    
+    return related[:limit]
+
+
+@router.get("/themes/{theme_id}/history", response_model=list[ThemeHistoryResponse])
+async def get_theme_history(theme_id: str):
+    """Get evolution history of a theme.
+    
+    Returns the version history showing how the theme has evolved over time,
+    including summary changes, tag changes, and reasons for each update.
+    """
+    theme_store = ThemeStore()
+    
+    # Check if theme exists
+    theme = theme_store.get_theme(theme_id)
+    if not theme:
+        raise HTTPException(status_code=404, detail="Theme not found")
+    
+    # Get history using ThemeStore method
+    history = theme_store.get_theme_history(theme_id)
+    if history is None:
+        return []
+    
+    return [ThemeHistoryResponse(**entry) for entry in history]
+
+
 @router.post("/query/themes", response_model=AggregatedSearchResponse)
 async def aggregated_theme_search(
     request: dict,
@@ -271,6 +461,7 @@ async def aggregated_theme_search(
         
         # Also search for nodes that don't have themes yet
         # Execute vector search for additional nodes
+        min_similarity = 0.3
         modifiers = QueryModifiers(
             time_range=modifiers_data.get("time_range", "all"),
             tags=selected_tags,
@@ -302,7 +493,9 @@ async def aggregated_theme_search(
                             "tag": tag,
                             "node_count": 1,
                             "keywords": [],
-                            "node_ids": [result.node.id]
+                            "node_ids": [result.node.id],
+                            "version": 1,
+                            "evolution_status": "stable"
                         },
                         "nodes": [{
                             "id": result.node.id,

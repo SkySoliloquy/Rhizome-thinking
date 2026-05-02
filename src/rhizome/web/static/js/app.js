@@ -180,7 +180,16 @@ const state = {
     selectedTags: [],
     searchResults: [],
     isLoading: false,
-    isBatchMode: false
+    isBatchMode: false,
+    batchRefineMode: false,
+    batchSelectedNodes: new Set(),
+    batchProcessing: false,
+    batchProgress: {
+        total: 0,
+        completed: 0,
+        failed: 0,
+        nodeStatus: {} // nodeId -> 'processing' | 'success' | 'error'
+    }
 };
 
 // ===== Query Options Storage Manager =====
@@ -302,6 +311,14 @@ const windowManager = {
 
         // Load main window content
         this.loadWindowContent(mainWindow);
+
+        // Scroll to top after content is loaded
+        setTimeout(() => {
+            const modalBody = document.getElementById('modalBody');
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+        }, 100);
     },
     
     openSideWindow(nodeId) {
@@ -508,27 +525,33 @@ const windowManager = {
     
     buildWindowContent(node, relatedNodes, windowObj) {
         const tagsHtml = ui.renderTagsInOrder(node.tags, 'node-detail-tag');
-        
-        const questionsHtml = node.processed.open_questions?.length 
+
+        const questionsHtml = node.processed.open_questions?.length
             ? node.processed.open_questions.map(q => `<li>${escapeHtml(q)}</li>`).join('')
             : '<li style="color: var(--color-text-muted)">无问题记录</li>';
-        
+
         const linksHtml = relatedNodes?.length
             ? relatedNodes.map(link => `
                 <div class="link-item" data-link-node-id="${link.node.id}">
                     <div class="link-proposition">${escapeHtml(link.node.processed.proposition)}</div>
                     <div class="link-meta">
-                        <span class="link-relation">${link.relation_name}</span>
+                        <span class="link-relation">${this.getRelationName(link.relation_type)}</span>
                         ${link.reason ? `<span class="link-reason" title="${escapeHtml(link.reason)}">${escapeHtml(link.reason.substring(0, 200))}${link.reason.length > 200 ? '...' : ''}</span>` : ''}
                         <span class="link-strength">强度: ${Math.round(link.strength * 100)}%</span>
                     </div>
                 </div>
             `).join('')
             : '<p style="color: var(--color-text-muted)">暂无连接</p>';
-        
+
         // Add origin indicator if this is the origin window
         const originBadge = windowObj.isOrigin ? '<span class="origin-indicator">起点</span>' : '';
+
+        // Title - always show the short proposition
+        const title = node.processed.proposition || '未命名节点';
         
+        // Refined content - only show if exists
+        const hasRefinedContent = node.refined_content && node.refined_content.trim().length > 0;
+
         // Raw input collapse/expand logic
         const rawInput = node.raw_input || '';
         const shouldCollapse = rawInput.length > 200;
@@ -555,11 +578,46 @@ const windowManager = {
                 </div>
             </div>`
             : `<div class="node-detail-content" style="color: var(--color-text-secondary); font-size: 0.875rem;">${escapeHtml(rawInput)}</div>`;
-        
+
         return `
-            <div class="node-detail-section">
-                <h4>标题 ${originBadge}</h4>
-                <div class="node-detail-content" style="font-weight: 500;">${escapeHtml(node.processed.proposition)}</div>
+            <!-- Title Section -->
+            <div class="node-detail-section title-section" style="background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%); border-left: 4px solid var(--color-primary); padding: 20px;">
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: var(--color-text-primary); margin: 0 0 8px 0;">${escapeHtml(title)}</h2>
+                <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+                    节点标题 · ${new Date(node.timestamp).toLocaleDateString('zh-CN')}
+                </div>
+            </div>
+
+            <!-- Refined Content Section -->
+            <div class="node-detail-section refined-content-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="margin: 0;">📝 精炼内容 ${originBadge}</h4>
+                    <div style="display: flex; gap: 8px;">
+                        ${hasRefinedContent ? `
+                        <button class="btn-icon refined-toggle-btn" onclick="windowManager.toggleRefinedContent(this)" title="收起/展开">
+                            <svg class="collapse-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                            <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        ` : ''}
+                        <button class="btn-icon" onclick="windowManager.regenerateRefinedContent('${node.id}')" title="重新生成">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                ${hasRefinedContent 
+                    ? `<div class="node-detail-content refined-content md-content refined-content-expandable">${renderMarkdown(node.refined_content)}</div>${node.last_refined_at ? `<div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">更新于 ${new Date(node.last_refined_at).toLocaleString('zh-CN')}</div>` : ''}`
+                    : `<div style="color: var(--color-text-muted); padding: 20px; text-align: center; background: var(--color-bg-secondary); border-radius: 8px;">
+                        <p>📝 尚未生成精炼内容</p>
+                        <p style="font-size: 0.9em; margin-top: 8px;">点击上方"重新生成"按钮创建</p>
+                    </div>`
+                }
             </div>
 
             <div class="node-detail-section">
@@ -597,9 +655,21 @@ const windowManager = {
                 <div style="font-size: 0.75rem; color: var(--color-text-muted);">
                     ID: ${node.id}<br>
                     创建时间: ${new Date(node.timestamp).toLocaleString('zh-CN')}
+                    ${node.refined_content_version ? `<br>版本: ${node.refined_content_version}` : ''}
                 </div>
             </div>
         `;
+    },
+
+    getRelationName(relation) {
+        const names = {
+            'support': '支持',
+            'contradict': '矛盾',
+            'extend': '延伸',
+            'source': '来源',
+            'analogy': '类比'
+        };
+        return names[relation] || relation;
     },
     
     toggleRawInput(rawInputId) {
@@ -613,6 +683,25 @@ const windowManager = {
                 collapsed.style.display = 'none';
                 expanded.style.display = 'block';
             }
+        }
+    },
+
+    toggleRefinedContent(btn) {
+        const section = btn.closest('.refined-content-section');
+        const content = section.querySelector('.refined-content-expandable');
+        const collapseIcon = btn.querySelector('.collapse-icon');
+        const expandIcon = btn.querySelector('.expand-icon');
+
+        if (content.classList.contains('collapsed')) {
+            // Expand
+            content.classList.remove('collapsed');
+            collapseIcon.style.display = 'block';
+            expandIcon.style.display = 'none';
+        } else {
+            // Collapse
+            content.classList.add('collapsed');
+            collapseIcon.style.display = 'none';
+            expandIcon.style.display = 'block';
         }
     },
     
@@ -945,6 +1034,103 @@ const windowManager = {
             windowEl.style.animation = 'none';
             windowEl.offsetHeight; // Trigger reflow
             windowEl.style.animation = 'pulse 0.5s ease';
+        }
+    },
+
+    openCustomWindow(id, title, contentHtml) {
+        // Ensure modal is open
+        const modal = document.getElementById('nodeModal');
+        if (!modal.classList.contains('active')) {
+            modal.classList.add('active');
+        }
+
+        const windowNumber = this.windows.length;
+        const customWindow = {
+            id: id,
+            isMain: false,
+            isOrigin: false,
+            windowNumber: windowNumber,
+            isCustom: true,
+            title: title,
+            content: contentHtml
+        };
+        this.windows.push(customWindow);
+
+        this.createCustomWindowDOM(customWindow, contentHtml);
+    },
+
+    createCustomWindowDOM(windowObj, contentHtml) {
+        const sideWindowsContainer = document.getElementById('sideWindows');
+
+        const windowEl = document.createElement('div');
+        windowEl.className = 'side-window custom-window';
+        windowEl.id = windowObj.id;
+        windowEl.innerHTML = `
+            <div class="modal-content">
+                <div class="window-number">${windowObj.windowNumber}</div>
+                <div class="modal-header">
+                    <h3>${windowObj.title}</h3>
+                    <div class="window-controls">
+                        <button class="window-control-btn close-side-btn" title="关闭">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    ${contentHtml}
+                </div>
+            </div>
+        `;
+
+        const closeBtn = windowEl.querySelector('.close-side-btn');
+        closeBtn.addEventListener('click', () => this.closeWindow(windowObj.id));
+
+        sideWindowsContainer.appendChild(windowEl);
+        sideWindowsContainer.scrollLeft = sideWindowsContainer.scrollWidth;
+    },
+
+    async regenerateRefinedContent(nodeId) {
+        const btn = document.querySelector('.refined-content-section .btn-icon[title="重新生成"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px;"></div>';
+        }
+
+        try {
+            const response = await fetch(`/api/v1/nodes/${nodeId}/refine`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('重新生成失败');
+
+            const data = await response.json();
+
+            // Reload the current window content
+            const windowObj = this.windows.find(w => w.nodeId === nodeId);
+            if (windowObj) {
+                await this.loadWindowContent(windowObj);
+            }
+
+            if (window.ui) {
+                window.ui.showToast('✓ 精炼内容已重新生成');
+            }
+        } catch (error) {
+            console.error('Regenerate refined content error:', error);
+            if (window.ui) {
+                window.ui.showToast('✗ 重新生成失败: ' + error.message, 'error');
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>`;
+            }
         }
     }
 };
@@ -1331,22 +1517,33 @@ const ui = {
         }
     },
 
-    switchView(viewId) {
+    switchView(viewId, params = null) {
         // Hide all views
         document.querySelectorAll('.view').forEach(view => {
             view.classList.remove('active');
         });
 
         // Show target view
-        document.getElementById(viewId).classList.add('active');
+        const targetView = document.getElementById(viewId);
+        if (targetView) {
+            targetView.classList.add('active');
+        }
 
-        // Update nav
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.view === viewId) {
-                item.classList.add('active');
-            }
-        });
+        // Update nav (only for main views)
+        const mainViews = ['searchView', 'addNodeView', 'outlineView', 'epistemicMapView', 'graphView', 'statsView', 'relationshipManagerView', 'relationshipGraphView'];
+        if (mainViews.includes(viewId)) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.view === viewId) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Store previous view for back navigation
+        if (state.currentView && mainViews.includes(state.currentView)) {
+            state.previousView = state.currentView;
+        }
 
         state.currentView = viewId;
 
@@ -1359,6 +1556,18 @@ const ui = {
             if (window.epistemicMapView) window.epistemicMapView.init();
         } else if (viewId === 'graphView') {
             if (window.graphView) window.graphView.init();
+        } else if (viewId === 'relationshipManagerView') {
+            if (window.relationshipManagerView) window.relationshipManagerView.init();
+        } else if (viewId === 'relationshipGraphView') {
+            if (window.relationshipGraphView) window.relationshipGraphView.init();
+        } else if (viewId === 'nodeDetailView' && params?.nodeId) {
+            if (window.NodeDetailView) window.NodeDetailView.show(params.nodeId);
+        } else if (viewId === 'themeDetailView' && params?.themeId) {
+            if (window.ThemeDetailView) window.ThemeDetailView.show(params.themeId);
+        } else if (viewId === 'themeEvolutionView' && params?.themeId) {
+            if (window.themeEvolutionView) window.themeEvolutionView.init(params.themeId);
+        } else if (viewId === 'themeConflictView') {
+            if (window.themeConflictView) window.themeConflictView.init(params?.themeId);
         }
     },
 
@@ -2237,6 +2446,102 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+/**
+ * Render Markdown to HTML (lightweight, supports common formatting)
+ */
+function renderMarkdown(text) {
+    if (!text) return '';
+
+    let html = escapeHtml(text);
+
+    // Headers: ## text -> <h3>text</h3>, ### text -> <h4>text</h4>
+    // Process headers FIRST before other patterns
+    html = html.replace(/^#{2}\s+(.+)$/gm, '<h3 class="md-h3">$1</h3>');
+    html = html.replace(/^#{3}\s+(.+)$/gm, '<h4 class="md-h4">$1</h4>');
+
+    // Inline code: `text` -> <code>text</code>
+    // Process code before bold/italic to avoid conflicts
+    html = html.replace(/`(.+?)`/g, '<code class="md-code">$1</code>');
+
+    // Bold: **text** -> <strong>text</strong>
+    // Only match when ** is preceded by whitespace/start and followed by whitespace/end/punctuation
+    // This avoids matching ** in the middle of words or Chinese text
+    html = html.replace(/(^|[\s\(])\*\*(.+?)\*\*([\s\)\.,;:!?]|$)/g, '$1<strong>$2</strong>$3');
+
+    // Italic: *text* -> <em>text</em>
+    // Only match single asterisks that are not part of **
+    // Require whitespace/start before and whitespace/end/punctuation after
+    html = html.replace(/(^|[\s\(])\*(?!\*)(.+?)(?<!\*)\*([\s\)\.,;:!?]|$)/g, '$1<em>$2</em>$3');
+
+    // Bullet list: - text or * text at line start -> <li>text</li>
+    html = html.replace(/^[-\*]\s+(.+)$/gm, '<li class="md-li">$1</li>');
+
+    // Numbered list: 1. text -> <li class="md-li">text</li>
+    html = html.replace(/^\d+\.\s+(.+)$/gm, '<li class="md-li">$1</li>');
+
+    // Blockquote: > text -> <blockquote>text</blockquote>
+    html = html.replace(/^>\s+(.+)$/gm, '<blockquote class="md-blockquote">$1</blockquote>');
+
+    // Split into lines for processing
+    const lines = html.split('\n');
+    const result = [];
+    let currentList = [];
+    let currentParagraph = [];
+
+    function flushParagraph() {
+        if (currentParagraph.length > 0) {
+            const content = currentParagraph.join('<br>');
+            result.push('<p class="md-p">' + content + '</p>');
+            currentParagraph = [];
+        }
+    }
+
+    function flushList() {
+        if (currentList.length > 0) {
+            result.push('<ul class="md-ul">' + currentList.join('') + '</ul>');
+            currentList = [];
+        }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        if (!line) {
+            // Empty line: flush current paragraph
+            flushParagraph();
+            continue;
+        }
+
+        // Check if line is a block element
+        if (line.startsWith('<h3') || line.startsWith('<h4') || line.startsWith('<blockquote')) {
+            flushParagraph();
+            flushList();
+            result.push(line);
+            continue;
+        }
+
+        // Check if line is a list item
+        if (line.startsWith('<li class="md-li">')) {
+            flushParagraph();
+            currentList.push(line);
+            continue;
+        }
+
+        // Regular line: add to current paragraph
+        // If previous was a list, flush it first
+        if (currentList.length > 0) {
+            flushList();
+        }
+        currentParagraph.push(line);
+    }
+
+    // Flush remaining content
+    flushParagraph();
+    flushList();
+
+    return result.join('\n');
+}
+
 // ===== Event Listeners =====
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize source manager
@@ -2372,8 +2677,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit node
     document.getElementById('submitNodeBtn').addEventListener('click', submitNode);
 
-    // Batch mode toggle
+    // Batch mode toggle (add node page)
     document.getElementById('batchModeBtn').addEventListener('click', toggleBatchMode);
+
+    // Batch refine toggle (search results)
+    const batchRefineToggleBtn = document.getElementById('batchRefineToggleBtn');
+    if (batchRefineToggleBtn) {
+        batchRefineToggleBtn.addEventListener('click', toggleBatchRefineMode);
+    }
+
+    // Batch refine confirm/cancel
+    const batchRefineConfirmBtn = document.getElementById('batchRefineConfirmBtn');
+    if (batchRefineConfirmBtn) {
+        batchRefineConfirmBtn.addEventListener('click', confirmBatchRefine);
+    }
+
+    const batchRefineCancelBtn = document.getElementById('batchRefineCancelBtn');
+    if (batchRefineCancelBtn) {
+        batchRefineCancelBtn.addEventListener('click', toggleBatchRefineMode);
+    }
 
     // Batch file upload
     document.getElementById('batchFile').addEventListener('change', (e) => {
@@ -2432,6 +2754,22 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.classList.remove('open');
         }
     });
+
+    // Event delegation for batch refine mode on search results
+    const searchResultsContainer = document.getElementById('searchResults');
+    if (searchResultsContainer) {
+        searchResultsContainer.addEventListener('click', (e) => {
+            if (!state.batchRefineMode) return;
+
+            // Find the closest node card
+            const card = e.target.closest('.node-card');
+            if (card && card.dataset.nodeId) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleNodeSelection(card.dataset.nodeId);
+            }
+        });
+    }
 });
 
 // ===== Service Worker Registration =====
@@ -2774,6 +3112,7 @@ function initQueryModeSwitching() {
     const semanticOptions = document.getElementById('semanticSearchOptions');
     const preciseOptions = document.getElementById('preciseSearchOptions');
     const searchInput = document.getElementById('searchInput');
+    const batchRefineControl = document.getElementById('batchRefineControl');
 
     queryModeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2785,10 +3124,14 @@ function initQueryModeSwitching() {
                 semanticOptions.style.display = 'block';
                 preciseOptions.style.display = 'none';
                 searchInput.placeholder = '输入语义锚点...';
+                if (batchRefineControl) batchRefineControl.style.display = 'none';
+                // Exit batch mode if active
+                if (state.batchRefineMode) toggleBatchRefineMode();
             } else {
                 semanticOptions.style.display = 'none';
                 preciseOptions.style.display = 'block';
                 searchInput.placeholder = '输入搜索内容（可选）...';
+                if (batchRefineControl) batchRefineControl.style.display = 'block';
             }
         });
     });
@@ -2820,6 +3163,7 @@ async function performPreciseSearch() {
         };
 
         const response = await api.preciseQuery(requestData);
+        state.searchResults = response.results || [];  // Save results to state
         renderPreciseResults(response.results);
         ui.showToast(`找到 ${response.total} 个结果`);
     } catch (error) {
@@ -2846,8 +3190,12 @@ function renderPreciseResults(results) {
 
     results.forEach((item, index) => {
         const tagsHtml = ui.renderTagsInOrder(item.tags, 'node-tag');
+        const isSelected = state.batchSelectedNodes.has(item.id);
+        const selectedClass = isSelected ? 'batch-selected' : '';
+        const statusIcon = getBatchStatusIcon(item.id);
         html += `
-            <div class="node-card precise-result" data-node-id="${item.id}">
+            <div class="node-card precise-result ${selectedClass}" data-node-id="${item.id}" style="position: relative;">
+                ${statusIcon}
                 <div class="node-card-header">
                     <div class="node-proposition">${escapeHtml(item.proposition)}</div>
                 </div>
@@ -2855,7 +3203,7 @@ function renderPreciseResults(results) {
                     <div class="node-tags">${tagsHtml}</div>
                     <span>${new Date(item.timestamp).toLocaleString('zh-CN')}</span>
                 </div>
-                <div class="node-actions">
+                <div class="node-actions" ${state.batchRefineMode ? 'style="display: none;"' : ''}>
                     <button class="action-btn view-btn" data-node-id="${item.id}">查看</button>
                     <button class="action-btn edit-btn" data-node-id="${item.id}">编辑</button>
                     <button class="action-btn delete-btn" data-node-id="${item.id}">删除</button>
@@ -2867,16 +3215,186 @@ function renderPreciseResults(results) {
     html += '</div>';
     container.innerHTML = html;
 
-    // Add event listeners
-    container.querySelectorAll('.view-btn').forEach(btn => {
-        btn.addEventListener('click', () => showNodeDetail(btn.dataset.nodeId));
+    // Normal mode: action buttons (batch mode uses event delegation on container)
+    if (!state.batchRefineMode) {
+        container.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showNodeDetail(btn.dataset.nodeId);
+            });
+        });
+        container.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(btn.dataset.nodeId);
+            });
+        });
+        container.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDeleteModal(btn.dataset.nodeId);
+            });
+        });
+    }
+}
+
+function getBatchStatusIcon(nodeId) {
+    // First check state for persistent status
+    const status = state.batchProgress.nodeStatus[nodeId];
+    if (status) {
+        const iconMap = {
+            success: { class: 'success', text: '✓' },
+            error: { class: 'error', text: '✗' },
+            processing: { class: 'processing', text: '⟳' }
+        };
+        const icon = iconMap[status];
+        if (icon) {
+            return `<div class="batch-status-icon ${icon.class}" data-node-id="${nodeId}">${icon.text}</div>`;
+        }
+    }
+
+    // Fallback to existing DOM element
+    const iconEl = document.querySelector(`.batch-status-icon[data-node-id="${nodeId}"]`);
+    if (!iconEl) return '';
+    return iconEl.outerHTML;
+}
+
+function toggleNodeSelection(nodeId) {
+    if (state.batchSelectedNodes.has(nodeId)) {
+        state.batchSelectedNodes.delete(nodeId);
+    } else {
+        state.batchSelectedNodes.add(nodeId);
+    }
+    updateBatchUI();
+    renderPreciseResults(state.searchResults);
+}
+
+function updateBatchUI() {
+    const count = state.batchSelectedNodes.size;
+    const countEl = document.getElementById('batchSelectedCount');
+    const confirmBtn = document.getElementById('batchRefineConfirmBtn');
+    
+    if (countEl) countEl.textContent = `已选择 ${count} 个节点`;
+    if (confirmBtn) confirmBtn.disabled = count === 0;
+}
+
+function toggleBatchRefineMode() {
+    state.batchRefineMode = !state.batchRefineMode;
+    const toolbar = document.getElementById('batchRefineToolbar');
+    const toggleBtn = document.getElementById('batchRefineToggleBtn');
+
+    if (state.batchRefineMode) {
+        toolbar.style.display = 'flex';
+        if (toggleBtn) toggleBtn.classList.add('active');
+        ui.showToast('批量模式：点击节点进行选择');
+    } else {
+        toolbar.style.display = 'none';
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        state.batchSelectedNodes.clear();
+        updateBatchUI();
+        // Note: We no longer clear status icons here
+        // They persist until page refresh or new search
+    }
+
+    // Re-render results if available
+    if (state.searchResults && state.searchResults.length > 0) {
+        renderPreciseResults(state.searchResults);
+    }
+}
+
+async function confirmBatchRefine() {
+    if (state.batchSelectedNodes.size === 0 || state.batchProcessing) return;
+
+    state.batchProcessing = true;
+    const confirmBtn = document.getElementById('batchRefineConfirmBtn');
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    const nodeIds = Array.from(state.batchSelectedNodes);
+    const total = nodeIds.length;
+
+    // Initialize progress tracking
+    state.batchProgress = {
+        total: total,
+        completed: 0,
+        failed: 0,
+        nodeStatus: {}
+    };
+
+    ui.showToast(`开始批量生成，共 ${total} 个节点...`);
+
+    // Mark all as processing and start parallel requests
+    nodeIds.forEach(nodeId => {
+        state.batchProgress.nodeStatus[nodeId] = 'processing';
+        setNodeStatus(nodeId, 'processing');
     });
-    container.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => openEditModal(btn.dataset.nodeId));
+
+    // Process all nodes in parallel
+    const promises = nodeIds.map(nodeId =>
+        fetch(`/api/v1/nodes/${nodeId}/refine`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('生成失败');
+            return { nodeId, success: true };
+        })
+        .catch(error => {
+            console.error(`Batch refine error for ${nodeId}:`, error);
+            return { nodeId, success: false, error };
+        })
+    );
+
+    // Wait for all to complete
+    const results = await Promise.allSettled(promises);
+
+    // Update status based on results
+    results.forEach((result, index) => {
+        const nodeId = nodeIds[index];
+        if (result.status === 'fulfilled' && result.value.success) {
+            state.batchProgress.nodeStatus[nodeId] = 'success';
+            state.batchProgress.completed++;
+            setNodeStatus(nodeId, 'success');
+        } else {
+            state.batchProgress.nodeStatus[nodeId] = 'error';
+            state.batchProgress.failed++;
+            setNodeStatus(nodeId, 'error');
+        }
     });
-    container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => openDeleteModal(btn.dataset.nodeId));
-    });
+
+    state.batchProcessing = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    const { completed, failed } = state.batchProgress;
+    ui.showToast(`批量生成完成: ${completed} 成功, ${failed} 失败`);
+
+    // Clear selection after completion
+    state.batchSelectedNodes.clear();
+    updateBatchUI();
+}
+
+function setNodeStatus(nodeId, status) {
+    const card = document.querySelector(`.node-card[data-node-id="${nodeId}"]`);
+    if (!card) return;
+    
+    // Remove existing status icon
+    const existingIcon = card.querySelector('.batch-status-icon');
+    if (existingIcon) existingIcon.remove();
+    
+    // Add new status icon
+    const iconMap = {
+        success: { class: 'success', text: '✓' },
+        error: { class: 'error', text: '✗' },
+        processing: { class: 'processing', text: '⟳' }
+    };
+    
+    const icon = iconMap[status];
+    if (icon) {
+        const iconEl = document.createElement('div');
+        iconEl.className = `batch-status-icon ${icon.class}`;
+        iconEl.textContent = icon.text;
+        iconEl.dataset.nodeId = nodeId;
+        card.appendChild(iconEl);
+    }
 }
 
 // ===== Node Editing =====
@@ -3315,7 +3833,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('backupDeleteModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'backupDeleteModal') backupManager.closeDeleteModal();
     });
+
+    // Back buttons for detail views
+    document.getElementById('backFromNodeDetail')?.addEventListener('click', () => {
+        const previousView = state.previousView || 'searchView';
+        ui.switchView(previousView);
+    });
+
+    document.getElementById('backFromThemeDetail')?.addEventListener('click', () => {
+        const previousView = state.previousView || 'searchView';
+        ui.switchView(previousView);
+    });
 });
+
+// ===== Navigation Helpers =====
+function showNodeDetailView(nodeId) {
+    ui.switchView('nodeDetailView', { nodeId });
+}
+
+function showThemeDetailView(themeId) {
+    ui.switchView('themeDetailView', { themeId });
+}
 
 // ===== Viewport Height Fix for Mobile Browsers =====
 function setViewportHeight() {
@@ -3369,3 +3907,29 @@ window.addEventListener('resize', () => {
     const isKeyboardOpen = window.innerHeight < window.outerHeight * 0.8;
     document.body.classList.toggle('keyboard-open', isKeyboardOpen);
 });
+
+// ===== Theme Evolution Navigation =====
+function openThemeEvolutionView(themeId) {
+    if (!themeId) {
+        ui.showToast('请先选择一个主题', 'error');
+        return;
+    }
+    ui.switchView('themeEvolutionView', { themeId });
+}
+
+function openThemeConflictView(themeId = null) {
+    ui.switchView('themeConflictView', { themeId });
+}
+
+function goBackFromEvolution() {
+    if (state.previousView) {
+        ui.switchView(state.previousView);
+    } else {
+        ui.switchView('searchView');
+    }
+}
+
+// Expose navigation functions globally
+window.openThemeEvolutionView = openThemeEvolutionView;
+window.openThemeConflictView = openThemeConflictView;
+window.goBackFromEvolution = goBackFromEvolution;

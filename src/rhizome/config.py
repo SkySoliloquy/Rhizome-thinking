@@ -40,7 +40,12 @@ class Settings(BaseSettings):
 
     # ChromaDB
     chroma_persist_dir: Path = Path("./storage/chroma")
-    
+
+    # Scheduler Settings
+    scheduler_enabled: bool = True
+    relationship_review_interval: int = 86400  # 24 hours in seconds
+    theme_evolution_check_interval: int = 86400  # 24 hours in seconds
+
     @property
     def nodes_dir(self) -> Path:
         """Directory for markdown node files."""

@@ -39,7 +39,7 @@ class Source(BaseModel):
 
 class Processed(BaseModel):
     """LLM-processed content for a node."""
-    
+
     proposition: str = Field(
         ...,
         description="Core proposition distilled from raw input",
@@ -49,7 +49,11 @@ class Processed(BaseModel):
         default_factory=list,
         description="Open questions left by this idea"
     )
-    
+    refined_content: str = Field(
+        default="",
+        description="Structured, well-organized version of raw input that preserves meaning but improves readability"
+    )
+
     def __str__(self) -> str:
         result = f"Proposition: {self.proposition}"
         if self.open_questions:
@@ -136,11 +140,40 @@ class Node(BaseModel):
         default=None,
         description="Vector representation for semantic retrieval (Stage 2)"
     )
+    refined_content: Optional[str] = Field(
+        default=None,
+        description="Refined/curated content after manual review"
+    )
+    refined_content_version: int = Field(
+        default=0,
+        description="Version number of refined content"
+    )
+    last_refined_at: Optional[datetime] = Field(
+        default=None,
+        description="When the content was last refined"
+    )
     
     @field_serializer("timestamp")
     def serialize_timestamp(self, value: datetime) -> str:
         return value.isoformat()
     
+    @field_serializer("last_refined_at")
+    def serialize_last_refined_at(self, value: Optional[datetime]) -> Optional[str]:
+        return value.isoformat() if value else None
+    
+    def _yaml_literal_block(self, text: str, base_indent: str = "") -> str:
+        """Format text as YAML literal block (|) for multi-line strings.
+
+        Always uses literal block format to avoid quoting issues with special characters.
+        """
+        if not text:
+            return '""'
+
+        lines = text.split('\n')
+        # Use literal block with strip indicator (|-)
+        # Each line is indented with base_indent + 4 spaces
+        return '|-\n' + '\n'.join(f'{base_indent}    {line}' for line in lines)
+
     def to_markdown(self) -> str:
         """Convert node to markdown format."""
         lines = [
@@ -150,16 +183,26 @@ class Node(BaseModel):
             "source:",
             f'  type: "{self.source.type}"',
         ]
-        
+
         if self.source.title:
-            lines.append(f'  title: "{self.source.title}"')
+            lines.append(f'  title: {self._yaml_literal_block(self.source.title, "  ")}')
         if self.source.location:
-            lines.append(f'  location: "{self.source.location}"')
-        
-        lines.append("tags:")
-        for tag in self.tags:
-            lines.append(f'  - "{tag}"')
-        
+            lines.append(f'  location: {self._yaml_literal_block(self.source.location, "  ")}')
+
+        # Add refined content fields if present
+        if self.refined_content:
+            lines.append(f'refined_content: {self._yaml_literal_block(self.refined_content)}')
+            lines.append(f'refined_content_version: {self.refined_content_version}')
+        if self.last_refined_at:
+            lines.append(f'last_refined_at: "{self.last_refined_at.isoformat()}"')
+
+        if self.tags:
+            lines.append("tags:")
+            for tag in self.tags:
+                lines.append(f'  - "{tag}"')
+        else:
+            lines.append("tags: []")
+
         if self.links:
             lines.append("links:")
             for link in self.links:
@@ -168,7 +211,7 @@ class Node(BaseModel):
                 lines.append(f'    strength: {link.strength}')
                 lines.append(f'    confirmed: {str(link.confirmed).lower()}')
                 if link.reason:
-                    lines.append(f'    reason: "{link.reason}"')
+                    lines.append(f'    reason: {self._yaml_literal_block(link.reason, "    ")}')
         
         lines.extend([
             "---",
@@ -260,6 +303,20 @@ class Node(BaseModel):
         if current_section == "raw_input":
             raw_input = "\n".join(section_content).strip()
         
+        # Parse refined content fields (backward compatible - may not exist in old files)
+        refined_content = metadata.get("refined_content")
+        refined_content_version = metadata.get("refined_content_version", 0)
+        last_refined_at = metadata.get("last_refined_at")
+        if last_refined_at:
+            last_refined_at = datetime.fromisoformat(last_refined_at)
+        
+        # Handle tags - ensure it's always a list
+        tags = metadata.get("tags")
+        if tags is None:
+            tags = []
+        elif not isinstance(tags, list):
+            tags = [tags] if tags else []
+
         return cls(
             id=metadata.get("id", str(uuid.uuid4())),
             timestamp=datetime.fromisoformat(metadata.get("timestamp", datetime.now().isoformat())),
@@ -269,8 +326,11 @@ class Node(BaseModel):
                 proposition=proposition,
                 open_questions=open_questions
             ),
-            tags=metadata.get("tags", []),
-            links=links
+            tags=tags,
+            links=links,
+            refined_content=refined_content,
+            refined_content_version=refined_content_version,
+            last_refined_at=last_refined_at
         )
     
     def get_summary(self) -> str:
