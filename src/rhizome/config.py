@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     relationship_review_interval: int = 86400  # 24 hours in seconds
     theme_evolution_check_interval: int = 86400  # 24 hours in seconds
 
+    # Update Settings
+    github_repo: str = ""  # format: owner/repo
+    github_branch: str = "stable"
+    github_token: str = ""  # Personal Access Token for private repos
+    update_enabled: bool = True
+
     @property
     def nodes_dir(self) -> Path:
         """Directory for markdown node files."""

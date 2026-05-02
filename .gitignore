@@ -38,12 +38,8 @@ env/
 *.swo
 *~
 
-# Storage data (contains user content)
-storage/nodes/*.md
-storage/chroma/
-storage/metadata/*.json
-storage/themes/*.json
-storage/metadata/node_themes/*.json
+# Storage data (contains user content) - ignore entire directory
+storage/
 
 # Logs
 *.log
@@ -52,9 +48,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-
-# Backup files
-storage/backups/
 
 # Design prototypes
 design-preview/

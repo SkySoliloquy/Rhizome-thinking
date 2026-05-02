@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
 from rhizome.config import settings
-from rhizome.api.routes import nodes, query, links, stats, sources, themes, theme_evolution, search_stream, search_optimized, outline, epistemic_map, graph_view, backup, relationships
+from rhizome.api.routes import nodes, query, links, stats, sources, themes, theme_evolution, search_stream, search_optimized, outline, epistemic_map, graph_view, backup, relationships, update
 from rhizome.core.scheduler import Scheduler
 
 # Package-relative paths (independent of CWD)
@@ -76,6 +76,7 @@ def create_app() -> FastAPI:
     app.include_router(graph_view.router, prefix="/api/v1", tags=["graph_view"])
     app.include_router(backup.router, prefix="/api/v1", tags=["backup"])
     app.include_router(relationships.router, prefix="/api/v1", tags=["relationships"])
+    app.include_router(update.router, prefix="/api/v1", tags=["update"])
 
     # Mount static files
     if _STATIC_DIR.is_dir():

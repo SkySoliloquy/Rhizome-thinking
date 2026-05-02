@@ -1048,6 +1048,48 @@
             </div>
         </div>
 
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="settings-modal" style="display: none;">
+            <div class="settings-panel">
+                <div class="settings-header">
+                    <h3>系统设置</h3>
+                    <button class="close-btn" id="closeSettingsModal">&times;</button>
+                </div>
+                <div class="settings-body">
+                    <!-- System Update Section -->
+                    <div class="settings-section">
+                        <h4 class="settings-section-title">系统更新</h4>
+                        <div class="current-version">
+                            <span class="version-label">当前版本:</span>
+                            <span id="currentVersionDisplay" class="version-value">-</span>
+                        </div>
+                        <button id="checkUpdateBtn" class="btn-secondary" style="margin-top: 12px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            检查更新
+                        </button>
+                        <div id="versionList" class="version-list" style="display: none;">
+                            <!-- Version items rendered here -->
+                        </div>
+                        <div id="updateProgress" class="update-progress" style="display: none;">
+                            <div class="update-progress-status">
+                                <span id="updateProgressText">准备更新...</span>
+                                <span id="updateProgressPercent">0%</span>
+                            </div>
+                            <div class="update-progress-bar">
+                                <div id="updateProgressFill" class="update-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <button id="confirmUpdateBtn" class="btn-primary" style="margin-top: 12px;" disabled>
+                            确认更新
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Toast Notifications -->
         <div id="toastContainer" class="toast-container"></div>
     </div>
@@ -1055,8 +1097,34 @@
     <!-- Cytoscape.js for graph visualization -->
     <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
-    <!-- Scripts -->
-    <script src="/static/js/views.js?v=6"></script>
-    <script src="/static/js/app.js?v=6"></script>
+    <!-- Core Utilities -->
+    <script src="/static/js/state.js?v=7"></script>
+    <script src="/static/js/api-client.js?v=7"></script>
+    <script src="/static/js/ui-utils.js?v=7"></script>
+
+    <!-- Managers -->
+    <script src="/static/js/window-manager.js?v=7"></script>
+    <script src="/static/js/source-manager.js?v=7"></script>
+    <script src="/static/js/processing-queue.js?v=7"></script>
+    <script src="/static/js/backup-manager.js?v=7"></script>
+
+    <!-- Feature Modules -->
+    <script src="/static/js/search.js?v=7"></script>
+    <script src="/static/js/node-operations.js?v=7"></script>
+    <script src="/static/js/node-edit-delete.js?v=7"></script>
+    <script src="/static/js/settings-update.js?v=7"></script>
+    <script src="/static/js/mobile-pwa.js?v=7"></script>
+
+    <!-- Views -->
+    <script src="/static/js/view-outline.js?v=7"></script>
+    <script src="/static/js/view-maps.js?v=7"></script>
+    <script src="/static/js/view-relationships.js?v=7"></script>
+    <script src="/static/js/view-node-detail.js?v=7"></script>
+    <script src="/static/js/view-theme-detail.js?v=7"></script>
+    <script src="/static/js/view-theme-evolution.js?v=7"></script>
+    <script src="/static/js/views.js?v=7"></script>
+
+    <!-- Main Application -->
+    <script src="/static/js/app.js?v=7"></script>
 </body>
 </html>
