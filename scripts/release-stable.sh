@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# 禁用 Git 分页器，避免交互式界面卡住
+export GIT_PAGER=cat
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -43,21 +46,47 @@ info "检查工作树状态..."
 ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 info "当前分支: $ORIGINAL_BRANCH"
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
+HAS_UNSTAGED=false
+HAS_STAGED=false
+
+if ! git diff --quiet; then
+    HAS_UNSTAGED=true
+fi
+
+if ! git diff --cached --quiet; then
+    HAS_STAGED=true
+fi
+
+if [ "$HAS_UNSTAGED" = true ] || [ "$HAS_STAGED" = true ]; then
     warn "工作树不干净，存在未提交的更改"
     echo ""
-    echo "未暂存的更改:"
-    git diff --stat
-    echo ""
-    echo "已暂存的更改:"
-    git diff --cached --stat
-    echo ""
-    read -p "是否继续发布? (y/N): " confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        info "已取消发布"
-        exit 0
+
+    if [ "$HAS_UNSTAGED" = true ]; then
+        echo "未暂存的更改:"
+        git diff --stat || true
+        echo ""
     fi
-    warn "继续发布，未提交的更改将不会被包含在 stable 分支中"
+
+    if [ "$HAS_STAGED" = true ]; then
+        echo "已暂存的更改:"
+        git diff --cached --stat || true
+        echo ""
+    fi
+
+    # 自动模式检测：如果输入被重定向（非交互式），自动继续
+    if [ ! -t 0 ]; then
+        warn "检测到非交互式环境，自动继续发布"
+        warn "未提交的更改将不会被包含在 stable 分支中"
+    else
+        # 交互式环境，询问用户
+        printf "是否继续发布? (y/N): "
+        read -r confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            info "已取消发布"
+            exit 0
+        fi
+        warn "继续发布，未提交的更改将不会被包含在 stable 分支中"
+    fi
 else
     success "工作树干净"
 fi
@@ -116,14 +145,7 @@ EXCLUDE_PATTERNS=(
     "*.egg"
 )
 
-# 构建 git checkout 的排除参数
-CHECKOUT_EXCLUDES=""
-for pattern in "${EXCLUDE_PATTERNS[@]}"; do
-    CHECKOUT_EXCLUDES="$CHECKOUT_EXCLUDES --exclude=$pattern"
-done
-
-# 从原分支检出所有文件（使用稀疏检出方式排除）
-# 先获取原分支的所有文件列表
+# 从原分支获取所有文件列表
 FILES=$(git ls-tree -r --name-only "$ORIGINAL_BRANCH" 2>/dev/null || true)
 
 if [ -z "$FILES" ]; then
