@@ -1,12 +1,8 @@
 """LLM processing module for Rhizome Thinking."""
 
-import json
 from typing import Any, Optional
 
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
-
-from rhizome.config import settings
+from rhizome.core.llm_client import LLMClient, MockLLMClient
 from rhizome.core.models import Node, Processed, Source, TagType
 
 
@@ -98,7 +94,7 @@ USER_PROMPT_TEMPLATE = """请处理以下输入，生成知识节点：
 """
 
 
-class LLMProcessor:
+class LLMProcessor(LLMClient):
     """Processes raw input using MiniMax API."""
 
     def __init__(
@@ -114,65 +110,15 @@ class LLMProcessor:
             base_url: MiniMax API base URL (defaults to settings)
             model: Model name (defaults to settings)
         """
-        self.api_key = api_key or settings.minimax_api_key
-        self.base_url = base_url or settings.minimax_base_url
-        self.model = model or settings.minimax_model
+        super().__init__(
+            api_key=api_key,
+            base_url=base_url,
+            model=model,
+            default_timeout=120.0,
+            max_retries=3
+        )
 
-        if not self.api_key:
-            raise ValueError("MiniMax API key is required. Set MINIMAX_API_KEY environment variable.")
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10)
-    )
-    async def _call_api(self, messages: list[dict[str, str]]) -> dict[str, Any]:
-        """Call MiniMax API with retry logic.
-
-        Args:
-            messages: List of message dictionaries with 'role' and 'content'
-
-        Returns:
-            API response
-        """
-        # Use OpenAI-compatible endpoint
-        url = f"{self.base_url}/chat/completions"
-
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-
-        # Use standard OpenAI message format
-        openai_messages = []
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role == "system":
-                openai_messages.append({"role": "system", "content": content})
-            elif role == "user":
-                openai_messages.append({"role": "user", "content": content})
-            elif role == "assistant":
-                openai_messages.append({"role": "assistant", "content": content})
-
-        # OpenAI-compatible payload
-        payload = {
-            "model": self.model,
-            "messages": openai_messages,
-            "temperature": 0.3,
-            "max_tokens": 4000
-        }
-
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            if not response.is_success:
-                raise httpx.HTTPStatusError(
-                    f"MiniMax API returned {response.status_code}: {response.text[:500]}",
-                    request=response.request,
-                    response=response
-                )
-            return response.json()
-
-    def _parse_response(self, response: dict[str, Any]) -> dict[str, Any]:
+    def process_response(self, response: dict[str, Any]) -> dict[str, Any]:
         """Parse API response and extract structured data.
 
         Args:
@@ -181,58 +127,25 @@ class LLMProcessor:
         Returns:
             Parsed data
         """
-        try:
-            # Check for MiniMax error response
-            base_resp = response.get("base_resp", {})
-            if base_resp.get("status_code", 0) != 0:
-                raise ValueError(f"MiniMax API error: {base_resp.get('status_msg', 'Unknown error')}")
+        data = self.parse_json_response(response)
 
-            # MiniMax uses 'reply' field for the response content
-            content = response.get("reply", "")
+        # Validate required fields (support both old and new field names)
+        if "title" not in data and "proposition" not in data:
+            raise ValueError("Missing 'title' or 'proposition' field in response")
 
-            # Fallback to OpenAI format if reply is empty
-            if not content:
-                choices = response.get("choices", [])
-                if choices:
-                    message = choices[0].get("message", {})
-                    content = message.get("content", "")
+        # Normalize field names (support both old and new formats)
+        if "title" not in data and "proposition" in data:
+            data["title"] = data["proposition"]
+        if "questions" not in data and "open_questions" in data:
+            data["questions"] = data["open_questions"]
 
-            if not content:
-                raise ValueError("Empty content in API response")
+        # Set defaults
+        data.setdefault("questions", [])
+        data.setdefault("tags", ["vague"])
+        data.setdefault("potential_links", [])
+        data.setdefault("refined_content", "")
 
-            # Try to find JSON in the content
-            # The model might wrap JSON in markdown code blocks
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                json_str = content.split("```")[1].split("```")[0].strip()
-            else:
-                json_str = content.strip()
-
-            data = json.loads(json_str)
-
-            # Validate required fields (support both old and new field names)
-            if "title" not in data and "proposition" not in data:
-                raise ValueError("Missing 'title' or 'proposition' field in response")
-
-            # Normalize field names (support both old and new formats)
-            if "title" not in data and "proposition" in data:
-                data["title"] = data["proposition"]
-            if "questions" not in data and "open_questions" in data:
-                data["questions"] = data["open_questions"]
-
-            # Set defaults
-            data.setdefault("questions", [])
-            data.setdefault("tags", ["vague"])
-            data.setdefault("potential_links", [])
-            data.setdefault("refined_content", "")
-
-            return data
-
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse JSON from API response: {e}")
-        except Exception as e:
-            raise ValueError(f"Failed to parse API response: {e}")
+        return data
 
     async def process(
         self,
@@ -272,11 +185,11 @@ class LLMProcessor:
             {"role": "user", "content": user_prompt}
         ]
 
-        # Call API
-        response = await self._call_api(messages)
+        # Call API using inherited method
+        response = await self.call_api_async(messages, max_tokens=4000)
 
-        # Parse response
-        data = self._parse_response(response)
+        # Parse response using inherited method
+        data = self.process_response(response)
 
         # Create Processed object (use title as proposition for backward compatibility)
         processed = Processed(
@@ -304,7 +217,7 @@ class LLMProcessor:
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "Say 'OK' and nothing else."}
             ]
-            response = await self._call_api(messages)
+            await self.call_api_async(messages)
             return True
         except Exception:
             return False
@@ -348,17 +261,10 @@ class LLMProcessor:
             {"role": "user", "content": user_prompt}
         ]
 
-        response = await self._call_api(messages)
+        response = await self.call_api_async(messages)
 
-        # Extract content from response
-        content = response.get("reply", "")
-        if not content:
-            choices = response.get("choices", [])
-            if choices:
-                message = choices[0].get("message", {})
-                content = message.get("content", "")
-
-        content = content.strip() if content else ""
+        # Extract content from response using inherited method
+        content = self.extract_content(response)
 
         # Remove <think>...</think> blocks
         import re
@@ -367,17 +273,8 @@ class LLMProcessor:
         return content
 
 
-class MockLLMProcessor(LLMProcessor):
+class MockLLMProcessor(MockLLMClient):
     """Mock processor for testing without API calls."""
-
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None
-    ) -> None:
-        """Initialize mock processor with mock API values."""
-        super().__init__(api_key="mock", base_url="mock", model="mock")
 
     def _generate_mock_title(self, raw_input: str) -> str:
         """Generate a mock short title (5-10 chars) based on content."""
@@ -401,7 +298,7 @@ class MockLLMProcessor(LLMProcessor):
             keywords.append("疑问")
         if "未来" in raw_input:
             keywords.append("未来")
-            
+
         if keywords:
             # Combine up to 2 keywords
             if len(keywords) >= 2:
@@ -417,15 +314,15 @@ class MockLLMProcessor(LLMProcessor):
         # Split raw input into sentences for processing
         sentences = raw_input.replace('。', '|').replace('，', '|').replace('\n', '|').split('|')
         sentences = [s.strip() for s in sentences if s.strip()]
-        
+
         # Identify main themes
         has_ai = "人工智能" in raw_input or "AI" in raw_input
         has_thinking = "思考" in raw_input or "认知" in raw_input
         has_challenge = "问题" in raw_input or "挑战" in raw_input or "风险" in raw_input
         has_future = "未来" in raw_input or "发展" in raw_input
-        
+
         sections = []
-        
+
         # Section 1: Core content summary
         if sentences:
             sections.append("## 核心观点\n")
@@ -434,14 +331,14 @@ class MockLLMProcessor(LLMProcessor):
             if len(sentences) > 1 and len(core_content) < 30:
                 core_content += "，" + sentences[1]
             sections.append(core_content + "\n")
-        
+
         # Section 2: Key points
         if len(sentences) >= 3:
             sections.append("\n## 关键要点\n")
             for i, sentence in enumerate(sentences[2:5], 1):
                 if sentence and len(sentence) > 5:
                     sections.append(f"{i}. {sentence}\n")
-        
+
         # Section 3: Reflections/Challenges
         if has_challenge or has_future:
             sections.append("\n## 待探索问题\n")
@@ -450,13 +347,13 @@ class MockLLMProcessor(LLMProcessor):
             if has_future:
                 sections.append("- 未来的发展方向与可能性\n")
             sections.append("- 需要进一步深入思考的议题\n")
-        
+
         # Section 4: Conclusion
         sections.append("\n## 总结\n")
         if sentences:
             last_sentence = sentences[-1] if len(sentences[-1]) > 10 else sentences[-2] if len(sentences) > 1 else sentences[0]
             sections.append(f"{last_sentence}")
-        
+
         refined = "".join(sections)
         return refined
 
@@ -469,10 +366,10 @@ class MockLLMProcessor(LLMProcessor):
         """Return mock processed data with properly structured refined content."""
         # Generate proper short title (5-10 chars)
         title = self._generate_mock_title(raw_input)
-        
+
         # Generate structured refined content
         refined_content = self._generate_mock_refined_content(raw_input)
-        
+
         processed = Processed(
             proposition=title,
             open_questions=["这是一个需要进一步思考的问题"],

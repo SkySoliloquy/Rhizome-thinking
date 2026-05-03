@@ -1,31 +1,43 @@
 """LLM-powered semantic search reranking."""
 
 import json
-import re
 import logging
+import re
 from typing import Optional
 
-import httpx
-
 from rhizome.config import settings
+from rhizome.core.llm_client import LLMClient, MockLLMClient
 from rhizome.core.theme_models import Theme
 
 logger = logging.getLogger(__name__)
 
 
-class LLMSearchReranker:
+class LLMSearchReranker(LLMClient):
     """Uses LLM to rerank themes based on semantic relevance."""
 
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
         """Initialize the LLM reranker."""
-        self.api_key = api_key or settings.minimax_api_key
-        self.base_url = base_url or settings.minimax_base_url
-        
+        super().__init__(
+            api_key=api_key,
+            base_url=base_url,
+            default_timeout=120.0,
+            max_retries=3
+        )
+
         logger.info(f"[LLM Reranker] Initializing with base_url: {self.base_url}")
         logger.info(f"[LLM Reranker] API key exists: {bool(self.api_key)}")
 
-        if not self.api_key:
-            raise ValueError("MiniMax API key is required for LLM search reranking.")
+    def process_response(self, response: dict) -> list[tuple[Theme, float]]:
+        """Process API response into ranked theme list.
+
+        Args:
+            response: API response dictionary
+
+        Returns:
+            List of (theme, score) tuples
+        """
+        content = self.extract_content(response)
+        return self._parse_ranking(content)
 
     def _build_prompt(self, query: str, themes: list[Theme], filters: dict) -> str:
         """Build the prompt for LLM reranking."""
@@ -123,47 +135,24 @@ class LLMSearchReranker:
         logger.info(f"[LLM Reranker] Filters received: time_range={filters.get('time_range')}, tags={filters.get('tags')}, search_mode={filters.get('search_mode')}")
         logger.info(f"[LLM Reranker] Prompt preview:\n{prompt[:500]}...")
 
-        payload = {
-            "model": settings.minimax_model,
-            "messages": [
-                {"role": "system", "content": "你是一个专门用于知识库语义搜索排序的AI助手。"},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.3,
-            "max_tokens": 1000
-        }
+        messages = [
+            {"role": "system", "content": "你是一个专门用于知识库语义搜索排序的AI助手。"},
+            {"role": "user", "content": prompt}
+        ]
 
-        url = f"{self.base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        logger.info(f"[LLM Reranker] Sending request to: {url}")
+        logger.info(f"[LLM Reranker] Sending request to: {self.base_url}/chat/completions")
 
         try:
-            with httpx.Client(timeout=120.0) as client:
-                response = client.post(url, headers=headers, json=payload)
-                response.raise_for_status()
-                data = response.json()
-                
-            logger.info(f"[LLM Reranker] API response received successfully")
+            # Use inherited sync API call method
+            response = self.call_api_sync(messages, max_tokens=1000)
 
-            content = data.get("reply", "")
-            if not content and "choices" in data:
-                content = data["choices"][0].get("message", {}).get("content", "")
-            
-            logger.info(f"[LLM Reranker] LLM response content preview: {content[:200]}...")
+            logger.info("[LLM Reranker] API response received successfully")
 
-            result = self._parse_ranking(content, themes)
+            # Use inherited response processing
+            result = self.process_response(response)
             logger.info(f"[LLM Reranker] Parsed {len(result)} ranked themes")
             return result
-            
-        except httpx.HTTPError as e:
-            logger.error(f"[LLM Reranker] HTTP error calling MiniMax API: {e}")
-            logger.error(f"[LLM Reranker] Response status: {getattr(e.response, 'status_code', 'N/A')}")
-            logger.error(f"[LLM Reranker] Response text: {getattr(e.response, 'text', 'N/A')[:500]}")
-            raise
+
         except Exception as e:
             logger.error(f"[LLM Reranker] Unexpected error: {e}")
             import traceback
@@ -211,7 +200,7 @@ class LLMSearchReranker:
         raise ValueError("No JSON found in LLM response")
 
 
-class MockLLMSearchReranker:
+class MockLLMSearchReranker(MockLLMClient):
     """Mock reranker for testing without API calls."""
 
     def rerank_themes(

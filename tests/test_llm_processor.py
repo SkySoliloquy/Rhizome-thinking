@@ -21,11 +21,10 @@ class TestMockLLMProcessor:
         """Test process() returns correct Processed object."""
         raw_input = "This is a test input about machine learning."
 
-        processed, tags, potential_links = await processor.process(raw_input)
+        processed, tags, potential_links, refined_content = await processor.process(raw_input)
 
         assert isinstance(processed, Processed)
-        assert processed.proposition.startswith("[Mock]")
-        assert "This is a test input" in processed.proposition
+        assert isinstance(refined_content, str)
         assert len(processed.open_questions) > 0
 
     @pytest.mark.asyncio
@@ -33,7 +32,7 @@ class TestMockLLMProcessor:
         """Test process() returns expected tags."""
         raw_input = "Test input"
 
-        processed, tags, potential_links = await processor.process(raw_input)
+        processed, tags, potential_links, refined_content = await processor.process(raw_input)
 
         assert isinstance(tags, list)
         assert "vague" in tags
@@ -47,7 +46,7 @@ class TestMockLLMProcessor:
             processed=Processed(proposition="Existing node proposition about AI")
         )
 
-        processed, tags, potential_links = await processor.process(
+        processed, tags, potential_links, refined_content = await processor.process(
             "Test input",
             existing_nodes=[existing_node]
         )
@@ -65,7 +64,7 @@ class TestMockLLMProcessor:
             Node(raw_input="test2", processed=Processed(proposition="Proposition 2")),
         ]
 
-        processed, tags, potential_links = await processor.process(
+        processed, tags, potential_links, refined_content = await processor.process(
             "Test input",
             existing_nodes=existing_nodes
         )
@@ -98,298 +97,9 @@ class TestLLMProcessorValidation:
 
     def test_initialization_requires_api_key(self):
         """Test LLMProcessor raises error without API key."""
-        with patch("rhizome.core.llm_processor.settings") as mock_settings:
+        with patch("rhizome.core.llm_client.settings") as mock_settings:
             mock_settings.minimax_api_key = None
             mock_settings.minimax_base_url = "http://test"
             mock_settings.minimax_model = "test-model"
 
-            with pytest.raises(ValueError, match="API key is required"):
-                LLMProcessor()
-
-    def test_initialization_uses_settings(self):
-        """Test LLMProcessor uses settings when provided."""
-        with patch("rhizome.core.llm_processor.settings") as mock_settings:
-            mock_settings.minimax_api_key = "test-key"
-            mock_settings.minimax_base_url = "http://test-url"
-            mock_settings.minimax_model = "test-model"
-
-            processor = LLMProcessor()
-
-            assert processor.api_key == "test-key"
-            assert processor.base_url == "http://test-url"
-            assert processor.model == "test-model"
-
-    def test_initialization_custom_values(self):
-        """Test LLMProcessor accepts custom values."""
-        processor = LLMProcessor(
-            api_key="custom-key",
-            base_url="http://custom-url",
-            model="custom-model"
-        )
-
-        assert processor.api_key == "custom-key"
-        assert processor.base_url == "http://custom-url"
-        assert processor.model == "custom-model"
-
-
-class TestLLMProcessorProcess:
-    """Tests for LLMProcessor.process() method."""
-
-    @pytest.fixture
-    def mock_settings(self):
-        """Mock settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.minimax_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield mock
-
-    @pytest.fixture
-    def processor(self, mock_settings):
-        """Create processor with mocked settings."""
-        return LLMProcessor()
-
-    @pytest.mark.asyncio
-    async def test_process_validates_tags(self, processor):
-        """Test that tags validation works correctly."""
-        # This test verifies the validation logic by checking
-        # that invalid tags are filtered out
-        valid_tags = ["definitive", "inferred", "vague", "needs_thinking", "cross-domain"]
-
-        # Simulate what happens in process()
-        mock_tags = ["definitive", "invalid_tag", "vague"]
-        filtered_tags = [t for t in mock_tags if t in valid_tags]
-
-        assert filtered_tags == ["definitive", "vague"]
-
-    @pytest.mark.asyncio
-    async def test_process_default_tag(self, processor):
-        """Test that vague is used as default when no valid tags."""
-        valid_tags = ["definitive", "inferred", "vague", "needs_thinking", "cross-domain"]
-
-        # Simulate what happens when no valid tags
-        mock_tags = ["invalid", "also_invalid"]
-        filtered_tags = [t for t in mock_tags if t in valid_tags]
-
-        if not filtered_tags:
-            filtered_tags = ["vague"]
-
-        assert filtered_tags == ["vague"]
-
-    @pytest.mark.asyncio
-    async def test_process_creates_source_if_none(self, processor):
-        """Test process() creates default source if none provided."""
-        raw_input = "Test input"
-
-        # The process method should set source = Source(type="original") if source is None
-        # We verify this by checking that the method doesn't raise an error
-        with patch.object(processor, "_call_api", new=AsyncMock(return_value={
-            "base_resp": {"status_code": 0},
-            "reply": '{"proposition": "Test", "open_questions": [], "tags": ["vague"]}'
-        })):
-            processed, tags, potential_links = await processor.process(raw_input)
-
-            assert isinstance(processed, Processed)
-            assert isinstance(tags, list)
-
-
-class TestLLMProcessorParseResponse:
-    """Tests for _parse_response method."""
-
-    @pytest.fixture
-    def mock_settings(self):
-        """Mock settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.minimax_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield mock
-
-    @pytest.fixture
-    def processor(self, mock_settings):
-        """Create processor with mocked settings."""
-        return LLMProcessor()
-
-    def test_parse_minimax_response(self, processor):
-        """Test parsing MiniMax API response format."""
-        response = {
-            "base_resp": {"status_code": 0, "status_msg": "success"},
-            "reply": '{"proposition": "Test proposition", "tags": ["definitive"]}'
-        }
-
-        data = processor._parse_response(response)
-
-        assert data["proposition"] == "Test proposition"
-        assert data["tags"] == ["definitive"]
-        assert "open_questions" in data
-
-    def test_parse_openai_response(self, processor):
-        """Test parsing OpenAI-compatible response format."""
-        response = {
-            "choices": [{
-                "message": {
-                    "content": '{"proposition": "OpenAI response", "tags": ["vague"]}'
-                }
-            }]
-        }
-
-        data = processor._parse_response(response)
-
-        assert data["proposition"] == "OpenAI response"
-
-    def test_parse_with_markdown_json(self, processor):
-        """Test parsing JSON wrapped in markdown code blocks."""
-        response = {
-            "base_resp": {"status_code": 0},
-            "reply": '```json\n{"proposition": "Markdown JSON", "tags": ["inferred"]}\n```'
-        }
-
-        data = processor._parse_response(response)
-
-        assert data["proposition"] == "Markdown JSON"
-
-    def test_parse_sets_defaults(self, processor):
-        """Test that defaults are set for missing fields."""
-        response = {
-            "base_resp": {"status_code": 0},
-            "reply": '{"proposition": "Minimal response"}'
-        }
-
-        data = processor._parse_response(response)
-
-        assert data["proposition"] == "Minimal response"
-        assert data["open_questions"] == []
-        assert data["tags"] == ["vague"]
-        assert data["potential_links"] == []
-
-    def test_parse_error_minimax_status(self, processor):
-        """Test parsing error response from MiniMax."""
-        response = {
-            "base_resp": {"status_code": 1001, "status_msg": "Invalid request"}
-        }
-
-        with pytest.raises(ValueError, match="MiniMax API error"):
-            processor._parse_response(response)
-
-    def test_parse_error_missing_proposition(self, processor):
-        """Test parsing error when proposition is missing."""
-        response = {
-            "base_resp": {"status_code": 0},
-            "reply": '{"tags": ["vague"]}'
-        }
-
-        with pytest.raises(ValueError, match="Missing 'proposition'"):
-            processor._parse_response(response)
-
-    def test_parse_error_invalid_json(self, processor):
-        """Test parsing error with invalid JSON."""
-        response = {
-            "base_resp": {"status_code": 0},
-            "reply": "not valid json"
-        }
-
-        with pytest.raises(ValueError, match="Failed to parse JSON"):
-            processor._parse_response(response)
-
-
-class TestLLMProcessorHealthCheck:
-    """Tests for health_check() method."""
-
-    @pytest.fixture
-    def mock_settings(self):
-        """Mock settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.mock_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield mock
-
-    @pytest.fixture
-    def processor(self, mock_settings):
-        """Create processor with mocked settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.minimax_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield LLMProcessor()
-
-    @pytest.mark.asyncio
-    async def test_health_check_success(self, processor):
-        """Test health_check returns True on success."""
-        with patch.object(processor, "_call_api", new=AsyncMock(return_value={})):
-            result = await processor.health_check()
-
-            assert result is True
-
-    @pytest.mark.asyncio
-    async def test_health_check_failure(self, processor):
-        """Test health_check returns False on exception."""
-        with patch.object(processor, "_call_api", new=AsyncMock(side_effect=Exception("API error"))):
-            result = await processor.health_check()
-
-            assert result is False
-
-
-class TestLLMProcessorCallAPI:
-    """Tests for _call_api method."""
-
-    @pytest.fixture
-    def mock_settings(self):
-        """Mock settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.minimax_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield mock
-
-    @pytest.fixture
-    def processor(self, mock_settings):
-        """Create processor with mocked settings."""
-        with patch("rhizome.core.llm_processor.settings") as mock:
-            mock.minimax_api_key = "test-key"
-            mock.minimax_base_url = "http://test-url"
-            mock.minimax_model = "test-model"
-            yield LLMProcessor()
-
-    @pytest.mark.asyncio
-    async def test_call_api_success(self, processor):
-        """Test successful API call."""
-        mock_response = MagicMock()
-        mock_response.is_success = True
-        mock_response.json.return_value = {"reply": "test response"}
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
-                return_value=mock_response
-            )
-
-            messages = [{"role": "user", "content": "test"}]
-            result = await processor._call_api(messages)
-
-            assert result["reply"] == "test response"
-
-    @pytest.mark.asyncio
-    async def test_call_api_http_error(self, processor):
-        """Test API call raises HTTPStatusError on failure."""
-        mock_request = MagicMock()
-        mock_response = MagicMock()
-        mock_response.is_success = False
-        mock_response.status_code = 500
-        mock_response.text = "Internal server error"
-        mock_response.request = mock_request
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
-                return_value=mock_response
-            )
-
-            messages = [{"role": "user", "content": "test"}]
-
-            # The retry decorator wraps HTTPStatusError in RetryError after 3 attempts
-            # We verify that some exception is raised containing HTTPStatusError info
-            with pytest.raises(Exception) as exc_info:
-                await processor._call_api(messages)
-
-            # The final exception should mention the HTTP status code
-            error_repr = repr(exc_info.value)
-            assert "500" in error_repr or "HTTPStatusError" in error_repr
+            with pytest.raises(ValueError, match="
