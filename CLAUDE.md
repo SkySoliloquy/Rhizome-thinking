@@ -127,6 +127,12 @@ rhz uninstall                   # Uninstall systemd service
 # Tests
 pytest tests/ -v
 pytest tests/test_models.py -v   # Single test file
+
+# Lint & type-check (configured in pyproject.toml)
+ruff check src/                   # Lint (E, F, I, N, W rules)
+ruff format --check src/          # Format check (line-length 100)
+black --check src/                # Alternative format check
+mypy src/                         # Strict type checking
 ```
 
 ## Docker Deployment
@@ -194,9 +200,17 @@ Data persists across container rebuilds via the volume mount. **Never commit `st
 - `vector_sync`: Ensures ChromaDB is in sync with node store
 - `backup_create`: Periodic full backups
 
-**Events**: `EventBus` provides decoupled communication between modules. Key events: `NodeCreatedEvent`, `NodeUpdatedEvent`, `NodeDeletedEvent`, `ThemeCreatedEvent`, `ThemeUpdatedEvent`, `RelationshipCreatedEvent`. The relationship_manager and theme_extractor subscribe to these events.
+**Events**: `EventBus` provides decoupled communication between modules. Key events defined in `core/events.py`: `NodeCreatedEvent` (fires on node creation, triggers relationship analysis and theme evolution detection) and `AnalysisCompletedEvent` (fires when async analysis completes). Handlers include `RelationshipAnalysisHandler` and `ThemeEvolutionHandler`. Subscribe via `event_bus.subscribe()` or `event_bus.subscribe_callback()`. The global bus is obtained via `get_event_bus()`, reset for testing via `reset_event_bus()`.
 
-**API Keys**: `.env` file (not committed). MiniMax for LLM processing (`MINIMAX_API_KEY`), SiliconFlow for embeddings (`SILICONFLOW_API_KEY`). Set `USE_MOCK_EMBEDDING=true` for offline testing.
+**Environment**: `.env` file (not committed, copy from `.env.example`). Key variables:
+- `MINIMAX_API_KEY` / `MINIMAX_BASE_URL` / `MINIMAX_MODEL` — LLM processing (MiniMax API)
+- `SILICONFLOW_API_KEY` / `SILICONFLOW_BASE_URL` / `SILICONFLOW_EMBEDDING_MODEL` — embeddings
+- `USE_MOCK_EMBEDDING=true` — offline testing without embedding API
+- `ENVIRONMENT` — `development`, `production`, or `testing`
+- `SCHEDULER_ENABLED`, `RELATIONSHIP_REVIEW_INTERVAL`, `THEME_EVOLUTION_CHECK_INTERVAL` — background task tuning
+- `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN`, `UPDATE_ENABLED` — auto-update from GitHub
+- `STORAGE_DIR`, `CHROMA_PERSIST_DIR`, `SECRET_KEY`, `DEBUG` — app settings
+See `src/rhizome/config.py` for all defaults.
 
 **Interface language**: CLI output uses Chinese; code, comments, API paths/params use English.
 

@@ -85,7 +85,7 @@ function renderVersionList(versions, currentVersion) {
 
     container.innerHTML = versions.map(v => {
         const hash = v.commit_hash || v.hash || '';
-        const isCurrent = hash === currentVersion || currentVersion.startsWith(hash) || hash.startsWith(currentVersion);
+        const isCurrent = hash === currentVersion || hash.startsWith(currentVersion.substring(0, 7));
         const currentClass = isCurrent ? 'current' : '';
         const currentBadge = isCurrent ? '<span class="version-current-badge">当前</span>' : '';
         const shortHash = hash ? hash.substring(0, 7) : '';
