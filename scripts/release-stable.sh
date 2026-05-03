@@ -187,7 +187,40 @@ else
     exit 1
 fi
 
-# 8. 切换回原分支
+# 8. 生成版本标签（基于日期，自动递增序号）
+info "生成版本标签..."
+
+# 获取当前日期前缀，如 v2026.0503
+DATE_PREFIX="v$(date '+%Y.%m%d')"
+
+# 查找当天已有的标签，确定序号
+EXISTING_TAGS=$(git tag -l "${DATE_PREFIX}.*" 2>/dev/null || true)
+if [ -n "$EXISTING_TAGS" ]; then
+    # 提取最大序号
+    MAX_SEQ=$(echo "$EXISTING_TAGS" | sed 's/.*\.//' | sort -n | tail -1)
+    NEXT_SEQ=$((MAX_SEQ + 1))
+else
+    NEXT_SEQ=1
+fi
+
+VERSION_TAG="${DATE_PREFIX}.${NEXT_SEQ}"
+
+info "创建标签: $VERSION_TAG"
+git tag -a "$VERSION_TAG" -m "Release $VERSION_TAG
+
+Stable release from $ORIGINAL_BRANCH
+Date: $(date '+%Y-%m-%d %H:%M:%S')
+Files: $ADDED_COUNT added, $SKIPPED_COUNT skipped"
+
+# 推送标签到 origin
+info "推送标签到 origin..."
+if git push origin "$VERSION_TAG"; then
+    success "标签 $VERSION_TAG 已推送到 origin"
+else
+    warn "标签推送失败，但 stable 分支已成功推送"
+fi
+
+# 9. 切换回原分支
 info "切换回 $ORIGINAL_BRANCH 分支..."
 git checkout "$ORIGINAL_BRANCH"
 success "已切换回 $ORIGINAL_BRANCH 分支"
@@ -198,6 +231,7 @@ echo ""
 echo "发布摘要:"
 echo "  原分支:    $ORIGINAL_BRANCH"
 echo "  目标分支:  stable"
+echo "  版本标签:  $VERSION_TAG"
 echo "  提交信息:  $COMMIT_MSG"
 echo "  添加文件:  $ADDED_COUNT"
 echo "  跳过文件:  $SKIPPED_COUNT"
